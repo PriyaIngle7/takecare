@@ -4,7 +4,7 @@ import React from 'react'
 const Createcaretaker = () => {
   return (
     <View>
-      <Text>Createcaretaker</Text>
+      <Text>Create Account as Caretaker</Text>
     </View>
   )
 }
