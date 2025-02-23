@@ -10,6 +10,7 @@ import {
   const { width } = Dimensions.get("window");
   const scale = width / 320;
   import GoogleSvg from "../../assets/images/google";
+import LoginLogo from "../compo/LoginLogo";
   
 const CreateUser = () => {
     const [name, setName] = useState("");
@@ -140,7 +141,8 @@ const CreateUser = () => {
           >
             Or continue with
           </Text>
-          <View
+          <LoginLogo componentPass={<GoogleSvg/>}/>
+          {/* <View
             style={{
               backgroundColor: "#ECECEC",
               borderRadius: 10 * scale,
@@ -150,7 +152,7 @@ const CreateUser = () => {
             }}
           >
             <GoogleSvg />
-          </View>
+          </View> */}
         </View>
       </SafeAreaView>
     );
