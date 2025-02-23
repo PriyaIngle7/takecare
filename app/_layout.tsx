@@ -8,7 +8,7 @@ const Stack = createStackNavigator();
 
 export default function RootLayout() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Createcaretaker">
+    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Landingpage">
       <Stack.Screen name="Landingpage" component={Landingpage} />
       <Stack.Screen name="CreateAccountAs" component={CreateAccountAs} />
       <Stack.Screen name="Createcaretaker" component={Createcaretaker} />
