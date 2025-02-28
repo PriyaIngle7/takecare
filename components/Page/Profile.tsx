@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Image, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { Icon } from "react-native-elements";
+import ProfileSVG from "../../assets/images/profile";
 
 const renderProfileItem = (
     iconName: string,
@@ -61,10 +62,7 @@ const ProfileScreen = () => {
       </View>
 
       <View style={{ alignItems: "center", marginTop: 20 }}>
-        <Image
-          source={{ uri: "https://via.placeholder.com/100" }}
-          style={{ width: 100, height: 100, borderRadius: 50 }}
-        />
+        <ProfileSVG width={100} height={100} />
         <Text style={{ fontSize: 24, fontWeight: "bold", marginTop: 10 }}>
           {formData.name}
         </Text>
