@@ -16,13 +16,14 @@ import StepsScreen from "@/components/Page/StepsScreen";
 import MedicineMonitoringScreen from "@/components/Page/MedicineMonitoringScreen";  
 import ExerciseClipsScreen from "@/components/Page/ExerciseClipsScreen";  
 import HealthRecordScreen from "@/components/Page/HealthRecordScreen";  
+import ProfileScreen from "@/components/Page/Profile";
 const Stack = createStackNavigator();
 
 export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="Features"
+      initialRouteName="Profile"
     >
       <Stack.Screen name="Landingpage" component={Landingpage} />
       <Stack.Screen name="CreateAccountAs" component={CreateAccountAs} />
@@ -40,7 +41,8 @@ export default function RootLayout() {
       <Stack.Screen name="MedicineMonitoringScreen" component={MedicineMonitoringScreen} />
       <Stack.Screen name="ExerciseClipsScreen" component={ExerciseClipsScreen} />
       <Stack.Screen name="HealthRecordScreen" component={HealthRecordScreen} />
-
+      <Stack.Screen name ="Profile" component = {ProfileScreen}/>
+   
 
     </Stack.Navigator>
   );
