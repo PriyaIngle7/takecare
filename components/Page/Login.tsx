@@ -13,6 +13,9 @@ import AppleSvg from "@/assets/images/apple";
 import FacebookSvg from "@/assets/images/facebook";
 const { width } = Dimensions.get("window");
 const scale = width / 320;
+
+import { Formik } from 'formik';
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +44,14 @@ const Login = () => {
       >
         Welcome back you've been missed!
       </Text>
-      <View style={{ width: "90%" }}>
+
+      <Formik
+     initialValues={{ email: '',password:''}}
+     onSubmit={values => console.log(values)}
+     
+   >
+     {({ handleChange, handleBlur, handleSubmit, values }) => (
+       <View style={{ width: "90%" }}>
         <TextInput
           style={{
             borderWidth: 1 * scale,
@@ -52,8 +62,9 @@ const Login = () => {
             fontSize: 12 * scale,
             marginTop: 30 * scale,
           }}
-          onChangeText={setEmail}
-          value={email}
+          onChangeText={handleChange('email')}
+          onBlur={handleBlur('email')}
+          value={values.email}
           placeholder="Email"
           placeholderTextColor={"#626262"}
         />
@@ -67,8 +78,9 @@ const Login = () => {
             fontSize: 12 * scale,
             marginTop: 15 * scale,
           }}
-          onChangeText={setPassword}
-          value={password}
+          onChangeText={handleChange('password')}
+          onBlur={handleBlur('password')}
+          value={values.password}
           placeholder="Password"
           placeholderTextColor={"#626262"}
         />
@@ -114,7 +126,10 @@ const Login = () => {
         >
           Create new account
         </Text>
-      </View>
+      </View> 
+     )}
+   </Formik>
+
       <View style={{ marginTop: 100 * scale }}>
         <Text
           style={{ color: "#1F41BB", fontWeight: "bold", textAlign: "center" }}

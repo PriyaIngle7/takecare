@@ -1,4 +1,3 @@
-import { Text, View } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import Landingpage from "@/components/Page/Landingpage";
 import CreateAccountAs from "@/components/Page/CreateAccountAs";
@@ -15,15 +14,13 @@ import MedicineGuideScreen from "@/components/Page/MedicineGuideScreen";
 import StepsScreen from "@/components/Page/StepsScreen";  
 import MedicineMonitoringScreen from "@/components/Page/MedicineMonitoringScreen";  
 import ExerciseClipsScreen from "@/components/Page/ExerciseClipsScreen";  
-import HealthRecordScreen from "@/components/Page/HealthRecordScreen";  
+import HealthRecordScreen from "@/components/Page/HealthRecordScreen";
+
 const Stack = createStackNavigator();
 
 export default function RootLayout() {
   return (
-    <Stack.Navigator
-      screenOptions={{ headerShown: false }}
-      initialRouteName="Features"
-    >
+    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Landingpage">
       <Stack.Screen name="Landingpage" component={Landingpage} />
       <Stack.Screen name="CreateAccountAs" component={CreateAccountAs} />
       <Stack.Screen name="Createcaretaker" component={Createcaretaker} />
@@ -40,8 +37,6 @@ export default function RootLayout() {
       <Stack.Screen name="MedicineMonitoringScreen" component={MedicineMonitoringScreen} />
       <Stack.Screen name="ExerciseClipsScreen" component={ExerciseClipsScreen} />
       <Stack.Screen name="HealthRecordScreen" component={HealthRecordScreen} />
-
-
     </Stack.Navigator>
   );
 }
