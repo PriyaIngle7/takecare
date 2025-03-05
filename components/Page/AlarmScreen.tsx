@@ -85,7 +85,7 @@ export default function AlarmScreen() {
             <Text style={styles.modalTitle}>Set New Alarm</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter Alarm Label (e.g., Medicine)"
+              placeholder="Enter Alarm Label (e.g. Medicine)"
               value={alarmLabel}
               onChangeText={setAlarmLabel}
             />
