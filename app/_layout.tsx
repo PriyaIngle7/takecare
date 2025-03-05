@@ -17,6 +17,7 @@ import ExerciseClipsScreen from "@/components/Page/ExerciseClipsScreen";
 import HealthRecordScreen from "@/components/Page/HealthRecordScreen";  
 import ProfileScreen from "@/components/Page/Profile";
 import SettingsScreen from "@/components/Page/Settings";
+import UserList from "@/components/Page/UserList";
 
 const Stack = createStackNavigator();
 
@@ -24,7 +25,7 @@ export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="AlarmScreen"
+      initialRouteName="UserList"
     >
       <Stack.Screen name="Landingpage" component={Landingpage} />
       <Stack.Screen name="CreateAccountAs" component={CreateAccountAs} />
@@ -43,7 +44,8 @@ export default function RootLayout() {
       <Stack.Screen name="ExerciseClipsScreen" component={ExerciseClipsScreen} />
       <Stack.Screen name="HealthRecordScreen" component={HealthRecordScreen} />
       <Stack.Screen name ="Profile" component = {ProfileScreen}/>
-      <Stack.Screen name = "Settings" component ={SettingsScreen}/>
+      <Stack.Screen name ="Settings" component ={SettingsScreen}/>
+      <Stack.Screen name ="UserList" component ={UserList}/>
    
 
     </Stack.Navigator>
