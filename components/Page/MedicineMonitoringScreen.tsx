@@ -1,87 +1,100 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TouchableOpacity, Modal, StyleSheet, Alert, Image } from "react-native";
-import { Camera } from "expo-camera";
-import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import ProfileSvg from "../../assets/images/profile";
+import NameCard from "../compo/NameCard";
 
-export default function MedicineMonitoringScreen() {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [photo, setPhoto] = useState<string | null>(null);
-  const cameraRef = useRef<Camera | null>(null);
-  const [type, setType] = useState(Camera.Constants.Type.back); // ✅ Corrected Usage
-
-  // Request camera permissions
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
-    })();
-  }, []);
-
-  if (hasPermission === null) return <View />;
-  if (hasPermission === false) return <Text>No access to camera</Text>;
-
-  const takePicture = async () => {
-    if (cameraRef.current) {
-      try {
-        const photo = await cameraRef.current.takePictureAsync();
-        setPhoto(photo.uri);
-        setIsCameraOpen(false);
-      } catch (error) {
-        Alert.alert("Error", "Failed to take picture.");
-      }
-    }
-  };
-
+const LocationScreen = () => {
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.cameraContainer} onPress={() => setIsCameraOpen(true)}>
-        <Ionicons name="camera-outline" size={50} color="white" />
-        <Text style={styles.cameraText}>Tap to Open Camera</Text>
-      </TouchableOpacity>
+    <ScrollView contentContainerStyle={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <ProfileSvg source={{ uri: "https://via.placeholder.com/40" }} style={styles.avatar} />
+        <Text style={styles.welcomeText}>Hi, Welcome Back</Text>
+        <Text style={styles.userName}>John Doe</Text>
+      </View>
 
-      <Modal visible={isCameraOpen} animationType="slide">
-        <View style={styles.cameraModal}>
-          {isCameraOpen && (
-            <Camera
-              ref={(ref) => (cameraRef.current = ref!)}
-              style={styles.cameraView}
-              type={type} // ✅ No more undefined error
-            >
-              <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
-                <Ionicons name="camera" size={50} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.closeCamera} onPress={() => setIsCameraOpen(false)}>
-                <Ionicons name="close-circle" size={40} color="white" />
-              </TouchableOpacity>
-            </Camera>
-          )}
+      {/* Location Title */}
+      <Text style={styles.title}>Location</Text>
+
+      {/* Placeholder for Map */}
+      <View style={styles.mapPlaceholder}>
+        <Text style={styles.mapText}>Map Preview Here</Text>
+      </View>
+
+      {/* Location Details */}
+      <View style={styles.cardContainer}>
+        <View style={styles.card}>
+          <Text style={styles.cardText}>Last location: Pune</Text>
         </View>
-      </Modal>
-    </View>
+        <View style={styles.card}>
+          <Text style={styles.cardText}>Another Option</Text>
+        </View>
+      </View>
+    </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#f8f9fa" },
-  cameraContainer: {
-    backgroundColor: "black",
+  container: {
+    padding: 20,
+    backgroundColor: "#cce5ff",
+    alignItems: "center",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  welcomeText: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: "#666",
+  },
+  userName: {
+    marginLeft: 5,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  mapPlaceholder: {
+    width: "90%",
     height: 200,
-    borderRadius: 10,
+    backgroundColor: "#d9d9d9",
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 10,
+    borderRadius: 10,
+    marginBottom: 20,
   },
-  cameraText: { color: "white", fontSize: 16, marginTop: 5 },
-  cameraModal: { flex: 1, backgroundColor: "black", justifyContent: "center" },
-  cameraView: { flex: 1, width: "100%" },
-  closeCamera: { position: "absolute", top: 40, right: 20 },
-  captureButton: {
-    position: "absolute",
-    bottom: 30,
-    alignSelf: "center",
-    backgroundColor: "rgba(0,0,0,0.6)",
-    padding: 15,
-    borderRadius: 50,
+  mapText: {
+    fontSize: 16,
+    color: "#666",
+  },
+  cardContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "90%",
+  },
+  card: {
+    backgroundColor: "#007bff",
+    padding: 20,
+    borderRadius: 10,
+    width: "45%",
+    alignItems: "center",
+  },
+  cardText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
+
+export default LocationScreen;
