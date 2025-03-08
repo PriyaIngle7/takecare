@@ -1,18 +1,18 @@
 import * as React from "react"
 import Svg, { Circle, Path, Defs, Pattern, Use, Image } from "react-native-svg"
-function SvgComponent(props:any) {
+function UserImage1(props:any) {
   return (
     <Svg
-      width={235}
+      width={253}
       height={253}
-      viewBox="0 0 235 253"
+      viewBox="0 0 253 253"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
       {...props}
     >
-      <Circle cx={108.5} cy={126.5} r={126.5} fill="#D9D9D9" />
-      <Path fill="url(#pattern0_18_176)" d="M17 45H201V207.493H17z" />
+      <Circle cx={126.5} cy={126.5} r={126.5} fill="#D9D9D9" />
+      <Path fill="url(#pattern0_18_176)" d="M35 45H219V207.493H35z" />
       <Defs>
         <Pattern
           id="pattern0_18_176"
@@ -36,4 +36,4 @@ function SvgComponent(props:any) {
     </Svg>
   )
 }
-export default SvgComponent
+export default UserImage1;

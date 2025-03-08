@@ -1,26 +1,25 @@
-import { StyleSheet, Text, View, Dimensions } from "react-native";
+import { StyleSheet, Text, View, Dimensions, Image } from "react-native";
 import React, { useEffect, useState } from "react";
 import { AntDesign } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TextInput } from "react-native-gesture-handler";
 const { width } = Dimensions.get("window");
 const scale = width / 320;
-
-import UserListImg1 from "../../assets/images/userListImgh1" 
-
+import UserImage1 from "@/assets/images/userImage1";
 
 const UserList = () => {
   const [search, setSearch] = useState("");
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ backgroundColor: "#ffffff", flex: 1 }}>
       <View
         style={{
           paddingVertical: 10 * scale,
-          paddingHorizontal:10*scale,
+          paddingHorizontal: 10 * scale,
           flexDirection: "row",
           justifyContent: "space-around",
           alignItems: "center",
           backgroundColor: "#fff",
+          zIndex: 2,
         }}
       >
         <AntDesign name="arrowleft" size={20 * scale} color="#0B82D4" />
@@ -36,9 +35,14 @@ const UserList = () => {
         <AntDesign name="search1" size={20 * scale} color="#0B82D4" />
       </View>
 
-      <View
-      style={{marginTop:100}}>
-      <UserListImg1/>
+      <View style={{ flexDirection: "row" }}>
+        <Image
+          style={{ left: -35 * scale, top: -35 * scale }}
+          source={require("../../assets/images/userImage2.png")}
+        />
+        <Text style={{ alignSelf: "center", fontSize: 20 * scale,fontWeight:"700" }}>
+          User's List
+        </Text>
       </View>
     </SafeAreaView>
   );
