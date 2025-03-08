@@ -8,6 +8,7 @@ type RootStackParamList = {
   CreateUser: undefined; 
 };
 
+
 type NavigationProp = StackNavigationProp<RootStackParamList, "Createcaretaker">;
 
 const CreateAccountAs = () => {

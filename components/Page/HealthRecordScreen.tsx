@@ -40,7 +40,6 @@ const PatientInfoScreen = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Profile Section */}
     
 
       {/* Name Card */}
@@ -71,7 +70,7 @@ const PatientInfoScreen = () => {
   );
 };
 
-// Questions Array
+
 const questions = [
   { key: "diseaseHistory", question: "Name of the disease or symptoms you are facing", placeholder: "Enter details", type: "text" },
   { key: "yearsSuffering", question: "For how many years are you suffering?", placeholder: "Enter years", type: "text" },
@@ -85,7 +84,6 @@ const questions = [
   { key: "diet", question: "What kind of diet do you follow?", placeholder: "Vegetarian / Non-Vegetarian / Vegan", type: "text" }
 ];
 
-// Styles
 const styles = {
   container: {
     padding: 20,
@@ -147,4 +145,6 @@ const styles = {
   },
 };
 
+
 export default PatientInfoScreen;
+
