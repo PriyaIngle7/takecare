@@ -18,7 +18,7 @@ import HealthRecordScreen from "@/components/Page/HealthRecordScreen";
 import ProfileScreen from "@/components/Page/Profile";
 import SettingsScreen from "@/components/Page/Settings";
 import UserList from "@/components/Page/UserList";
-import life from "@/components/Page/life";
+
 
 const Stack = createStackNavigator();
 
@@ -26,12 +26,12 @@ export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="UserList"
+      initialRouteName="HealthRecordScreen"
     >
       
     
       
-   <Stack.Screen name="life" component={life} />
+
       <Stack.Screen name="Landingpage" component={Landingpage} />
       <Stack.Screen name="CreateAccountAs" component={CreateAccountAs} />
       <Stack.Screen name="Createcaretaker" component={Createcaretaker} />

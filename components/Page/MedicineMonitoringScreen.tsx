@@ -8,9 +8,9 @@ export default function MedicineMonitoringScreen() {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const cameraRef = useRef<Camera | null>(null);
-  const [type, setType] = useState(Camera.Constants.Type.back); // ✅ Corrected Usage
+  const [type, setType] = useState(Camera.Constants.Type.back); 
 
-  // Request camera permissions
+  
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -46,7 +46,7 @@ export default function MedicineMonitoringScreen() {
             <Camera
               ref={(ref) => (cameraRef.current = ref!)}
               style={styles.cameraView}
-              type={type} // ✅ No more undefined error
+              type={type} 
             >
               <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
                 <Ionicons name="camera" size={50} color="white" />
