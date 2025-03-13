@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+} from "react-native";
 
 const WebSocketChat = () => {
   const [messages, setMessages] = useState([]);
@@ -53,11 +60,27 @@ const WebSocketChat = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 10, backgroundColor: "#f5f5f5" },
-  message: { padding: 8, backgroundColor: "#ddd", borderRadius: 5, marginVertical: 4 },
+  message: {
+    padding: 8,
+    backgroundColor: "#ddd",
+    borderRadius: 5,
+    marginVertical: 4,
+  },
   inputContainer: { flexDirection: "row", alignItems: "center", marginTop: 10 },
-  input: { flex: 1, borderWidth: 1, padding: 10, borderRadius: 5, backgroundColor: "white" },
-  sendButton: { marginLeft: 10, backgroundColor: "blue", padding: 10, borderRadius: 5 },
-  sendText: { color: "white", fontWeight: "bold" }
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: "white",
+  },
+  sendButton: {
+    marginLeft: 10,
+    backgroundColor: "blue",
+    padding: 10,
+    borderRadius: 5,
+  },
+  sendText: { color: "white", fontWeight: "bold" },
 });
 
 export default WebSocketChat;
