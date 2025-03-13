@@ -25,7 +25,7 @@ export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="NotesScreen"
+      initialRouteName="ActivityScreen"
     >
       <Stack.Screen name="Landingpage" component={Landingpage} />
       <Stack.Screen name="CreateAccountAs" component={CreateAccountAs} />
@@ -55,6 +55,9 @@ export default function RootLayout() {
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="UserList" component={UserList} />
+
+
+      
     </Stack.Navigator>
   );
 }

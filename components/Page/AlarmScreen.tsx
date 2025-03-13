@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
   Modal,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import ProfileSVG from "../../assets/images/profile";
+import { useNavigation } from "@react-navigation/native";
+
 
 interface Alarm {
   id: string;
@@ -21,19 +22,27 @@ interface Alarm {
 }
 
 export default function AlarmScreen() {
+  const navigation = useNavigation();
   const [isRecording, setIsRecording] = useState(false);
   const [alarmTime, setAlarmTime] = useState("");
   const [alarmLabel, setAlarmLabel] = useState("");
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const handleLongPress = () => {
-    setIsRecording(true);
-    setTimeout(() => {
-      setIsRecording(false);
-      alert("Recording saved!");
-    }, 120000);
-  };
+  useEffect(() => {
+    const checkAlarms = setInterval(() => {
+      const now = new Date();
+      const currentTime = now.getHours() + ":" + now.getMinutes();
+      const triggeredAlarm = alarms.find(
+        (alarm) => alarm.time === currentTime && alarm.enabled
+      );
+      if (triggeredAlarm?.label.toLowerCase() === "medicine") {
+        navigation.navigate("ActivityScreen", { alarmLabel: "Medicine" });
+      }
+    }, 60000); // Check every 60 seconds
+
+    return () => clearInterval(checkAlarms);
+  }, [alarms]);
 
   const addAlarm = () => {
     if (alarmTime && alarmLabel) {
@@ -67,7 +76,6 @@ export default function AlarmScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.profileContainer}>
-        {/* <ProfileSVG style={styles.profileImage} /> */}
         <Image
           style={{ width: 50, height: 50, borderRadius: 100 }}
           source={{
@@ -80,15 +88,6 @@ export default function AlarmScreen() {
 
       <View style={styles.alarmContainer}>
         <Text style={styles.alarmText}>Alarm</Text>
-        <TouchableOpacity
-          style={[styles.recordButton, isRecording && styles.recording]}
-          onLongPress={handleLongPress}
-        >
-          <Text style={styles.recordText}>
-            {isRecording ? "Recording..." : "Hold to Record"}
-          </Text>
-          <FontAwesome name="microphone" size={20} color="#fff" />
-        </TouchableOpacity>
         <TouchableOpacity
           style={styles.addAlarmButton}
           onPress={() => setModalVisible(true)}
@@ -118,7 +117,6 @@ export default function AlarmScreen() {
       <Modal animationType="slide" transparent={true} visible={modalVisible}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Set New Alarm</Text>
             <TextInput
               style={styles.input}
               placeholder="Enter Alarm Label (e.g. Medicine)"
@@ -134,12 +132,6 @@ export default function AlarmScreen() {
             <TouchableOpacity style={styles.saveButton} onPress={addAlarm}>
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -149,79 +141,14 @@ export default function AlarmScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#F5F7FA" },
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  profileImage: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
+  profileContainer: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
   welcomeText: { fontSize: 14, color: "#1E90FF" },
   userName: { fontSize: 16, fontWeight: "bold" },
-  alarmContainer: {
-    alignItems: "center",
-    backgroundColor: "#E3F2FD",
-    padding: 20,
-    borderRadius: 15,
-    marginBottom: 20,
-  },
+  alarmContainer: { alignItems: "center", backgroundColor: "#E3F2FD", padding: 20 },
   alarmText: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  recordButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1E90FF",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  recording: { backgroundColor: "#FF4500" },
-  recordText: { color: "#fff", marginRight: 10 },
-  addAlarmButton: {
-    backgroundColor: "#1E90FF",
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
-  },
+  addAlarmButton: { backgroundColor: "#1E90FF", padding: 10, borderRadius: 8 },
   addAlarmText: { color: "#fff", fontSize: 16 },
-  reminderContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#E3F2FD",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    justifyContent: "space-between",
-  },
+  reminderContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#E3F2FD", padding: 15 },
   timeText: { fontSize: 16, fontWeight: "bold" },
   labelText: { fontSize: 14, color: "#333" },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
-    alignItems: "center",
-  },
-  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  input: {
-    width: "100%",
-    padding: 10,
-    backgroundColor: "#E3F2FD",
-    borderRadius: 8,
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  saveButton: {
-    backgroundColor: "#1E90FF",
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  saveButtonText: { color: "#fff" },
-  cancelButton: { marginTop: 10 },
-  cancelButtonText: { color: "red" },
 });
