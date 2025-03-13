@@ -18,14 +18,14 @@ import HealthRecordScreen from "@/components/Page/HealthRecordScreen";
 import ProfileScreen from "@/components/Page/Profile";
 import SettingsScreen from "@/components/Page/Settings";
 import UserList from "@/components/Page/UserList";
-
+import ChatApplication from "@/components/Page/ChatApplication";
 const Stack = createStackNavigator();
 
 export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="NotesScreen"
+      initialRouteName="ChatApplication"
     >
       <Stack.Screen name="Landingpage" component={Landingpage} />
       <Stack.Screen name="CreateAccountAs" component={CreateAccountAs} />
@@ -55,6 +55,7 @@ export default function RootLayout() {
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="UserList" component={UserList} />
+      <Stack.Screen name="ChatApplication" component={ChatApplication} />
     </Stack.Navigator>
   );
 }
