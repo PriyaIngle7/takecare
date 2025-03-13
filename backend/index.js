@@ -9,8 +9,10 @@ server.on("connection", (ws) => {
     console.log(`Received: ${message}`);
     ws.send(`Server: ${message}`);
   });
-
+  
   ws.on("close", () => console.log("Client disconnected"));
 });
 
 console.log("WebSocket server running on ws://localhost:8080");
+
+
