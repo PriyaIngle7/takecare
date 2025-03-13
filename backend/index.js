@@ -21,10 +21,11 @@ mongoose.connect(process.env.MONGO_URI, {
 .catch(err => console.log(err));
 
 // Sample Schema & Model
-const ItemSchema = new mongoose.Schema({
+const ActivitymonitoringSchema = new mongoose.Schema({
     name: String
 });
-const Item = mongoose.model('Item', ItemSchema);
+const Activitymonitoring = mongoose.model('Activitymonitoring', ActivitymonitoringSchema);
+
 
 // Routes
 app.get('/api/items', async (req, res) => {
