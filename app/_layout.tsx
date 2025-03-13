@@ -56,6 +56,9 @@ export default function RootLayout() {
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="UserList" component={UserList} />
       <Stack.Screen name="ChatApplication" component={ChatApplication} />
+
+
+      
     </Stack.Navigator>
   );
 }
