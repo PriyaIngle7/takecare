@@ -1,100 +1,112 @@
-import React from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
-import ProfileSvg from "../../assets/images/profile";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
+import React, { useState } from "react";
 import NameCard from "../compo/NameCard";
+import CameraSVG from "@/assets/images/camer";
+import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import { Button } from "react-native-paper";
 
-const LocationScreen = () => {
+const { width } = Dimensions.get("window");
+const scale = 320 / width;
+
+const MedicineMonitoringScreen = () => {
+  const [facing, setFacing] = useState<CameraType>("back");
+  const [permission, requestPermission] = useCameraPermissions();
+
+  if (!permission) {
+    return <View />;
+  }
+
+  if (!permission.granted) {
+    return (
+      <View style={styles.container}>
+        <Text>We need your permission to show the camera</Text>
+        <Button mode="contained" onPress={requestPermission}>
+          Grant Permission
+        </Button>
+      </View>
+    );
+  }
+
+  function toggleCameraFacing() {
+    setFacing((current) =>
+      current === "back" ? "front" : "back"
+    );
+  }
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <ProfileSvg source={{ uri: "https://via.placeholder.com/40" }} style={styles.avatar} />
-        <Text style={styles.welcomeText}>Hi, Welcome Back</Text>
-        <Text style={styles.userName}>John Doe</Text>
-      </View>
+    <View style={styles.container}>
+      <NameCard />
 
-      {/* Location Title */}
-      <Text style={styles.title}>Location</Text>
-
-      {/* Placeholder for Map */}
-      <View style={styles.mapPlaceholder}>
-        <Text style={styles.mapText}>Map Preview Here</Text>
-      </View>
-
-      {/* Location Details */}
-      <View style={styles.cardContainer}>
-        <View style={styles.card}>
-          <Text style={styles.cardText}>Last location: Pune</Text>
-        </View>
-        <View style={styles.card}>
-          <Text style={styles.cardText}>Another Option</Text>
+      <View style={styles.box}>
+        <View style={styles.innerBox}>
+          <View style={styles.textBox}>
+            <Text>Medicine Monitoring</Text>
+          </View>
+          <TouchableOpacity onPress={toggleCameraFacing}>
+            <CameraSVG />
+          </TouchableOpacity>
         </View>
       </View>
-    </ScrollView>
+
+      <View style={styles.infoBox}>
+        <Text>Monitor your medicine time</Text>
+      </View>
+
+      {/* ✅ CameraView with fixed height */}
+      <View style={styles.cameraContainer}>
+        <CameraView style={styles.camera} facing={facing} />
+      </View>
+    </View>
   );
 };
 
+export default MedicineMonitoringScreen;
+
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: "#cce5ff",
-    alignItems: "center",
+    flex: 1,
   },
-  header: {
+  box: {
+    backgroundColor: "#a7cfec",
+    marginHorizontal: 20 * scale,
+    paddingHorizontal: 30 * scale,
+    paddingVertical: 20 * scale,
+    borderRadius: 10 * scale,
+  },
+  innerBox: {
+    backgroundColor: "#0b82d4",
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
+    marginHorizontal: 20 * scale,
+    paddingHorizontal: 30 * scale,
+    paddingVertical: 20 * scale,
+    borderRadius: 10 * scale,
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  textBox: {
+    backgroundColor: "#ffffff",
+    marginHorizontal: 20 * scale,
+    paddingHorizontal: 30 * scale,
+    paddingVertical: 20 * scale,
+    borderRadius: 10 * scale,
   },
-  welcomeText: {
-    marginLeft: 10,
-    fontSize: 14,
-    color: "#666",
+  infoBox: {
+    backgroundColor: "#89c1ea",
+    paddingHorizontal: 30 * scale,
+    marginHorizontal: 20 * scale,
+    borderRadius: 10 * scale,
+    paddingVertical: 20 * scale,
+    marginVertical: 30 * scale,
   },
-  userName: {
-    marginLeft: 5,
-    fontSize: 16,
-    fontWeight: "bold",
+  cameraContainer: {
+    flex: 1, // Ensures the camera takes available space
+    height: 500, // ✅ Give explicit height for CameraView to render
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  mapPlaceholder: {
-    width: "90%",
-    height: 200,
-    backgroundColor: "#d9d9d9",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  mapText: {
-    fontSize: 16,
-    color: "#666",
-  },
-  cardContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "90%",
-  },
-  card: {
-    backgroundColor: "#007bff",
-    padding: 20,
-    borderRadius: 10,
-    width: "45%",
-    alignItems: "center",
-  },
-  cardText: {
-    color: "#fff",
-    fontWeight: "bold",
-    textAlign: "center",
+  camera: {
+    flex: 1,
   },
 });
-
-export default LocationScreen;
