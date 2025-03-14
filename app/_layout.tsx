@@ -25,7 +25,7 @@ export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="ChatApplication"
+      initialRouteName="ActivityScreen"
     >
       <Stack.Screen name="Landingpage" component={Landingpage} />
       <Stack.Screen name="CreateAccountAs" component={CreateAccountAs} />
