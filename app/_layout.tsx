@@ -19,14 +19,20 @@ import ProfileScreen from "@/components/Page/Profile";
 import SettingsScreen from "@/components/Page/Settings";
 import UserList from "@/components/Page/UserList";
 import ChatApplication from "@/components/Page/ChatApplication";
+import Test from "@/components/Page/Test";
 const Stack = createStackNavigator();
 
 export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
+<<<<<<< HEAD
       initialRouteName="ActivityScreen"
+=======
+      initialRouteName="MedicineMonitoringScreen"
+>>>>>>> 5ab826bfbb205de5f48c74eb69062e88052fe898
     >
+      <Stack.Screen name="Test" component={Test} />
       <Stack.Screen name="Landingpage" component={Landingpage} />
       <Stack.Screen name="CreateAccountAs" component={CreateAccountAs} />
       <Stack.Screen name="Createcaretaker" component={Createcaretaker} />
@@ -56,9 +62,6 @@ export default function RootLayout() {
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="UserList" component={UserList} />
       <Stack.Screen name="ChatApplication" component={ChatApplication} />
-
-
-      
     </Stack.Navigator>
   );
 }
