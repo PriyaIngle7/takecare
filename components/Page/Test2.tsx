@@ -1,39 +1,52 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Button, Alert } from "react-native";
-import * as Location from "expo-location";
+import React, { useState } from 'react';
+import { Button, Text, View, ActivityIndicator } from 'react-native';
+import { Audio } from 'expo-av';
 
-export default function LocationScreen() {
-  const [location, setLocation] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null);
+export default function App() {
+  const [sound, setSound] = useState();
+  const [loading, setLoading] = useState(false);
 
-  const getLocation = async () => {
+  async function generateAndPlaySpeech() {
     try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
-        return;
-      }
-
-      let loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Highest, // Ensures the most precise location
+      setLoading(true);
+      
+      // Call your Node.js API
+      const response = await fetch('http://local:3000/generate-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: 'Hello, this is a test of the Pinokio voice model.'
+        }),
       });
-
-      setLocation(loc.coords);
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate speech');
+      }
+      
+      // Get audio data
+      const audioBlob = await response.blob();
+      const audioUri = URL.createObjectURL(audioBlob);
+      
+      // Play the audio
+      const { sound } = await Audio.Sound.createAsync({ uri: audioUri });
+      setSound(sound);
+      await sound.playAsync();
     } catch (error) {
-      Alert.alert("Error", error.message);
+      console.error('Error:', error);
+      alert('Failed to generate or play speech');
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Button title="Get Location" onPress={getLocation} />
-      {errorMsg ? <Text>{errorMsg}</Text> : null}
-      {location && (
-        <Text>
-          Latitude: {location.latitude} {"\n"}
-          Longitude: {location.longitude} {"\n"}
-          Accuracy: {location.accuracy} meters
-        </Text>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <Button title="Generate Speech" onPress={generateAndPlaySpeech} />
       )}
     </View>
   );

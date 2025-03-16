@@ -146,5 +146,36 @@ app.get('/health-records', async (req, res) => {
     }
 });
 
+
+app.post('/generate-speech', (req, res) => {
+    const { text } = req.body;
+    
+    // Path to your Python script that will use the model
+    const pythonProcess = spawn('python', [
+      'tts_wrapper.py',  // You'll need to create this script
+      text
+    ], { cwd: './path/to/your/model' }); // Path to your model directory
+    
+    const chunks = [];
+    
+    pythonProcess.stdout.on('data', (data) => {
+      chunks.push(data);
+    });
+    
+    pythonProcess.stderr.on('data', (data) => {
+      console.error(`Python stderr: ${data}`);
+    });
+    
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        return res.status(500).send('Error generating speech');
+      }
+      
+      // Assuming the Python script outputs the path to the generated audio file
+      const audioFilePath = Buffer.concat(chunks).toString().trim();
+      res.sendFile(audioFilePath);
+    });
+  });
+
 /* ------------------------ SERVER START ------------------------ */
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

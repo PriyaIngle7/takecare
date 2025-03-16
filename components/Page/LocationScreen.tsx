@@ -33,7 +33,7 @@ export default function LocationScreen() {
       if (addr.length > 0) {
         setAddress(addr[0]); // Get the first result
       }
-    } catch (error) {
+    } catch (error:any) {
       Alert.alert("Error", error.message);
     } finally {
       setLoading(false);
