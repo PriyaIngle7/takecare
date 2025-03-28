@@ -1,86 +1,88 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TextInput, Button, ScrollView } from "react-native";
+import { io } from "socket.io-client";
 
-const WebSocketChat = () => {
-  const [messages, setMessages] = useState([]);
-  const [message, setMessage] = useState("");
-  const [ws, setWs] = useState(null);
+// For physical devices, replace with your computer's local IP address.
+// For Android Emulator, use "http://10.0.2.2:5000"
+// For iOS Simulator, "http://localhost:5000" usually works.
+const socket = io("http://192.168.1.100:5000"); // Replace with your IP if needed
 
-  useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8080"); // Replace with your WebSocket server URL
-    setWs(socket);
+export default function App() {
+    const [room, setRoom] = useState("");
+    const [message, setMessage] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [isConnected, setIsConnected] = useState(false);
 
-    socket.onmessage = (event) => {
-      setMessages((prevMessages) => [...prevMessages, event.data]);
+    useEffect(() => {
+        // Listen for connection events
+        socket.on("connect", () => {
+            console.log("✅ Connected to server:", socket.id);
+            setIsConnected(true);
+        });
+        socket.on("disconnect", () => {
+            console.log("❌ Disconnected from server");
+            setIsConnected(false);
+        });
+        // Listen for incoming messages
+        socket.on("receive_message", (data) => {
+            console.log("📩 Received message:", data);
+            setMessages(prev => [...prev, data]);
+        });
+        return () => {
+            socket.off("connect");
+            socket.off("disconnect");
+            socket.off("receive_message");
+        };
+    }, []);
+
+    const joinRoom = () => {
+        if (room) {
+            socket.emit("join_room", room);
+            console.log(`🚪 Joining room: ${room}`);
+        }
     };
 
-    socket.onopen = () => console.log("Connected to WebSocket");
-    socket.onerror = (error) => console.error("WebSocket error:", error);
-    socket.onclose = () => console.log("WebSocket closed");
+    const sendMessage = () => {
+        if (message && room) {
+            const data = { room, message };
+            socket.emit("send_message", data);
+            console.log(`✉️ Sent message: ${message}`);
+            setMessages(prev => [...prev, data]);
+            setMessage("");
+        }
+    };
 
-    return () => socket.close();
-  }, []);
-
-  const sendMessage = () => {
-    if (message.trim() && ws) {
-      ws.send(message);
-      setMessages((prevMessages) => [...prevMessages, `You: ${message}`]);
-      setMessage("");
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={messages}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => <Text style={styles.message}>{item}</Text>}
-      />
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Type a message..."
-          value={message}
-          onChangeText={setMessage}
-        />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-          <Text style={styles.sendText}>Send</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: "#f5f5f5" },
-  message: {
-    padding: 8,
-    backgroundColor: "#ddd",
-    borderRadius: 5,
-    marginVertical: 4,
-  },
-  inputContainer: { flexDirection: "row", alignItems: "center", marginTop: 10 },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 5,
-    backgroundColor: "white",
-  },
-  sendButton: {
-    marginLeft: 10,
-    backgroundColor: "blue",
-    padding: 10,
-    borderRadius: 5,
-  },
-  sendText: { color: "white", fontWeight: "bold" },
-});
-
-export default WebSocketChat;
+    return (
+        <View style={{ flex: 1, padding: 20 }}>
+            <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 10 }}>
+                React Native Chat
+            </Text>
+            <Text style={{ fontSize: 16, color: isConnected ? "green" : "red" }}>
+                {isConnected ? "🟢 Connected" : "🔴 Not Connected"}
+            </Text>
+            <TextInput
+                placeholder="Enter Room ID"
+                value={room}
+                onChangeText={setRoom}
+                style={{ borderWidth: 1, marginVertical: 10, padding: 10, borderRadius: 5 }}
+            />
+            <Button title="Join Room" onPress={joinRoom} />
+            <TextInput
+                placeholder="Type your message..."
+                value={message}
+                onChangeText={setMessage}
+                style={{ borderWidth: 1, marginVertical: 10, padding: 10, borderRadius: 5 }}
+            />
+            <Button title="Send Message" onPress={sendMessage} />
+            <ScrollView style={{ marginTop: 20 }}>
+                <Text style={{ fontSize: 18, fontWeight: "bold" }}>Messages:</Text>
+                {messages.map((msg, index) => (
+                    <Text key={index} style={{ padding: 5, backgroundColor: "#ddd", marginVertical: 2 }}>
+                        <Text style={{ fontWeight: "bold" }}>{msg.room}: </Text>
+                        {msg.message}
+                    </Text>
+                ))}
+            </ScrollView>
+        </View>
+    );
+}

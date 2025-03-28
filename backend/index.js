@@ -5,20 +5,95 @@ const bodyParser = require('body-parser');
 const chrono = require('chrono-node');
 const schedule = require('node-schedule');
 require('dotenv').config();
+const multer = require('multer');
+const Tesseract = require('tesseract.js');
+const { exec } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
-const app = express();
+
+
+
+const app = express(); 
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 
-// ✅ Connect to MongoDB Cluster
+// Create the uploads directory if it doesn't exist
+const uploadDir = 'uploads/';
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
+//  Connect to MongoDB Cluster
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
-.then(() => console.log('✅ MongoDB Connected'))
-.catch(err => console.log('❌ MongoDB Connection Error:', err));
+.then(() => console.log(' MongoDB Connected'))
+.catch(err => console.log(' MongoDB Connection Error:', err));
+
+
+
+
+
+// --------------------- IMAGE TEXT EXTRACTION (OCR FUNCTIONALITY) ---------------------
+
+// Set up multer storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');  // Directory to save the uploaded files
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname);  // Use original filename
+    }
+});
+
+const upload = multer({ storage: storage });
+
+
+app.post('/upload-image', upload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const imagePath = path.resolve(req.file.path); // Get absolute path
+
+    // Use Tesseract.js for OCR processing
+    Tesseract.recognize(
+        imagePath,        
+        'eng',            
+        { logger: (m) => console.log(m) } 
+    ).then(({ data: { text } }) => {
+        console.log("OCR Text: ", text);
+
+        // After OCR processing, use Python to process further with the model
+        processWithModel(imagePath, text, res);
+    }).catch((error) => {
+        console.error('OCR Error:', error);
+        res.status(500).json({ error: 'Failed to extract text from image' });
+    });
+});
+
+// Function to call Python script
+function processWithModel(imagePath, ocrText, res) {
+    const command = `
+        call pythonEnv\\Scripts\\activate &&
+        python inference.py "${imagePath}"
+    `;
+
+    exec(command, { shell: 'cmd.exe' }, (error, stdout, stderr) => {
+        if (error) {
+            console.error('Python Script Error:', error);
+            return res.status(500).json({ error: 'Failed to process image with the model' });
+        }
+
+        console.log('Python Output:', stdout);
+        res.json({ ocrText, modelOutput: stdout.trim() });
+    });
+}
+
 
 /* ------------------------ NOTES FUNCTIONALITY (notesDB) ------------------------ */
 const NoteSchema = new mongoose.Schema({
@@ -48,13 +123,15 @@ app.post('/add-note', async (req, res) => {
         res.status(201).json(newNote);
         if (parsedDate) {
             schedule.scheduleJob(parsedDate, () => {
-                console.log(`⏰ ALERT: Time to check your note: "${newNote.text}"`);
+                console.log(` ALERT: Time to check your note: "${newNote.text}"`);
             });
         }
     } catch (error) {
         res.status(500).json({ error: 'Failed to save note' });
     }
 });
+
+
 
 app.get('/notes', async (req, res) => {
     try {
@@ -94,6 +171,10 @@ app.get('/api/activity', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+
+
+
 
 /* --------------------- HEALTH RECORD FUNCTIONALITY (takecareDB) -------------------- */
 const HealthRecordSchema = new mongoose.Schema({
@@ -178,4 +259,4 @@ app.post('/generate-speech', (req, res) => {
   });
 
 /* ------------------------ SERVER START ------------------------ */
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
