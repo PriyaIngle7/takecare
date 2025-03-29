@@ -4,6 +4,8 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const chrono = require("chrono-node");
 const schedule = require("node-schedule");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const multer = require("multer");
 const Tesseract = require("tesseract.js");
@@ -12,12 +14,14 @@ const path = require("path");
 const fs = require("fs");
 
 
-
-
 const app = express(); 
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: "*" }));
+app.use(cors({
+  origin: "http://localhost:8081", 
+  credentials: true
+}));
+
 app.use(bodyParser.json());
 
 // Create the uploads directory if it doesn't exist
@@ -35,6 +39,123 @@ mongoose
   .then(() => console.log(" MongoDB Connected"))
   .catch((err) => console.log(" MongoDB Connection Error:", err));
 
+// User Schema
+const UserSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  role: {
+    type: String,
+    required: true,
+    enum: ['caretaker', 'patient'],
+    default: 'patient'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const User = mongoose.model("User", UserSchema);
+
+// Authentication Middleware
+const auth = async (req, res, next) => {
+  try {
+    const token = req.header("Authorization").replace("Bearer ", "");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({ _id: decoded.id });
+
+    if (!user) {
+      throw new Error();
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: "Please authenticate" });
+  }
+};
+
+// Authentication Routes
+app.post("/api/signup", async (req, res) => {
+  try {
+    const { email, password, name, role } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already registered" });
+    }
+
+    // Validate role
+    if (!['caretaker', 'patient'].includes(role)) {
+      return res.status(400).json({ error: "Invalid role. Must be either 'caretaker' or 'patient'" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new user
+    const user = new User({
+      email,
+      password: hashedPassword,
+      name,
+      role
+    });
+
+    await user.save();
+
+    // Generate token
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: "7d"
+    });
+
+    res.status(201).json({ user, token });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post("/api/signin", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Generate token with role
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: "7d"
+    });
+
+    res.json({ user, token });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // --------------------- IMAGE TEXT EXTRACTION (OCR FUNCTIONALITY) ---------------------
 
 // Set up multer storage
@@ -48,9 +169,6 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-app.get("/", (req, res) => {
-  res.send("Hello World");
-});
 
 app.post("/upload-image", upload.single("image"), (req, res) => {
   if (!req.file) {
@@ -167,10 +285,6 @@ app.get("/api/activity", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-
-
-
 
 /* --------------------- HEALTH RECORD FUNCTIONALITY (takecareDB) -------------------- */
 const HealthRecordSchema = new mongoose.Schema({
