@@ -28,7 +28,7 @@ export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="ExerciseClipsScreen"
+      initialRouteName="MedicineGuideScreen"
     >
       <Stack.Screen name="Test2" component={Test2} />
       <Stack.Screen name="Test" component={Test} />
