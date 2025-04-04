@@ -38,7 +38,7 @@ const Landingpage = () => {
           <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Login</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("CreateAccountAs")}>
+        <TouchableOpacity onPress={() => navigation.navigate("Createcaretaker")}>
           <Text style={{ fontSize: 16, color: "black", fontWeight: "bold" }}>Register</Text>
         </TouchableOpacity>
       </View>

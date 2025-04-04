@@ -13,28 +13,23 @@ import AppleSvg from "@/assets/images/apple";
 import FacebookSvg from "@/assets/images/facebook";
 const { width } = Dimensions.get("window");
 const scale = width / 320;
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { Alert } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+
 
 import { Formik } from "formik";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleSignIn = async (values: SignInFormValues) => {
+  const navigation = useNavigation(); 
+  const handleSignIn = async (values: { email: string; password: string }) => {
     try {
-      const apiEndpoint =
-        selectedRole === "caretaker"
-          ? "https://takecare-ds3g.onrender.com/api/signup"
-          : "https://takecare-ds3g.onrender.com/api/patient/signup";
+      const apiEndpoint = "http://localhost:5000/api/signin";
 
       const payload = {
-        name: values.name,
         email: values.email,
         password: values.password,
-        role: selectedRole,
-        ...(selectedRole === "patient" && {
-          caretakerPhoneNumber: values.caretakerPhoneNumber,
-        }),
       };
 
       const response = await axios.post(apiEndpoint, payload);
@@ -43,17 +38,16 @@ const Login = () => {
       await AsyncStorage.setItem("token", response.data.token);
       await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
 
-      navigation.navigate("Dashboard");
+      navigation.navigate("Dashboard" as never); // cast to fix TS complaint
     } catch (err: any) {
       Alert.alert(
         "Error",
         err.response?.data?.error ||
-          "An error occurred during signup. Please try again."
+          "An error occurred during login. Please try again."
       );
       console.log(err);
     }
   };
-
   return (
     <View
       style={{
@@ -151,7 +145,7 @@ const Login = () => {
             </TouchableOpacity>
             <Text
               onPress={() => {
-                console.log("Pressed");
+                navigation.navigate("Createcaretaker")
               }}
               style={{
                 textAlign: "center",
