@@ -14,11 +14,46 @@ import FacebookSvg from "@/assets/images/facebook";
 const { width } = Dimensions.get("window");
 const scale = width / 320;
 
-import { Formik } from 'formik';
+import { Formik } from "formik";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const handleSignIn = async (values: SignInFormValues) => {
+    try {
+      const apiEndpoint =
+        selectedRole === "caretaker"
+          ? "https://takecare-ds3g.onrender.com/api/signup"
+          : "https://takecare-ds3g.onrender.com/api/patient/signup";
+
+      const payload = {
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        role: selectedRole,
+        ...(selectedRole === "patient" && {
+          caretakerPhoneNumber: values.caretakerPhoneNumber,
+        }),
+      };
+
+      const response = await axios.post(apiEndpoint, payload);
+
+      // Store token and user data
+      await AsyncStorage.setItem("token", response.data.token);
+      await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
+
+      navigation.navigate("Dashboard");
+    } catch (err: any) {
+      Alert.alert(
+        "Error",
+        err.response?.data?.error ||
+          "An error occurred during signup. Please try again."
+      );
+      console.log(err);
+    }
+  };
+
   return (
     <View
       style={{
@@ -46,89 +81,89 @@ const Login = () => {
       </Text>
 
       <Formik
-     initialValues={{ email: '',password:''}}
-     onSubmit={values => console.log(values)}
-     
-   >
-     {({ handleChange, handleBlur, handleSubmit, values }) => (
-       <View style={{ width: "90%" }}>
-        <TextInput
-          style={{
-            borderWidth: 1 * scale,
-            borderRadius: 10 * scale,
-            paddingHorizontal: 15 * scale,
-            paddingVertical: 12 * scale,
-            backgroundColor: "#F1F4FF",
-            fontSize: 12 * scale,
-            marginTop: 30 * scale,
-          }}
-          onChangeText={handleChange('email')}
-          onBlur={handleBlur('email')}
-          value={values.email}
-          placeholder="Email"
-          placeholderTextColor={"#626262"}
-        />
-        <TextInput
-          style={{
-            borderWidth: 1 * scale,
-            borderRadius: 10 * scale,
-            paddingHorizontal: 15 * scale,
-            paddingVertical: 12 * scale,
-            backgroundColor: "#F1F4FF",
-            fontSize: 12 * scale,
-            marginTop: 15 * scale,
-          }}
-          onChangeText={handleChange('password')}
-          onBlur={handleBlur('password')}
-          value={values.password}
-          placeholder="Password"
-          placeholderTextColor={"#626262"}
-        />
-        <Text
-          style={{
-            color: "#1F41BB",
-            fontWeight: "800",
-            textAlign: "right",
-            marginTop: 5 * scale,
-          }}
-        >
-          Forgot your password?
-        </Text>
+        initialValues={{ email: "", password: "" }}
+        onSubmit={handleSignIn}
+      >
+        {({ handleChange, handleBlur, handleSubmit, values }) => (
+          <View style={{ width: "90%" }}>
+            <TextInput
+              style={{
+                borderWidth: 1 * scale,
+                borderRadius: 10 * scale,
+                paddingHorizontal: 15 * scale,
+                paddingVertical: 12 * scale,
+                backgroundColor: "#F1F4FF",
+                fontSize: 12 * scale,
+                marginTop: 30 * scale,
+              }}
+              onChangeText={handleChange("email")}
+              onBlur={handleBlur("email")}
+              value={values.email}
+              placeholder="Email"
+              placeholderTextColor={"#626262"}
+            />
+            <TextInput
+              style={{
+                borderWidth: 1 * scale,
+                borderRadius: 10 * scale,
+                paddingHorizontal: 15 * scale,
+                paddingVertical: 12 * scale,
+                backgroundColor: "#F1F4FF",
+                fontSize: 12 * scale,
+                marginTop: 15 * scale,
+              }}
+              onChangeText={handleChange("password")}
+              onBlur={handleBlur("password")}
+              value={values.password}
+              placeholder="Password"
+              placeholderTextColor={"#626262"}
+            />
+            <Text
+              style={{
+                color: "#1F41BB",
+                fontWeight: "800",
+                textAlign: "right",
+                marginTop: 5 * scale,
+              }}
+            >
+              Forgot your password?
+            </Text>
 
-        <TouchableOpacity
-          style={{
-            backgroundColor: "#3AA0EB",
-            paddingVertical: 10 * scale,
-            borderRadius: 10 * scale,
-            marginTop: 10 * scale,
-          }}
-        >
-          <Text
-            style={{
-              textAlign: "center",
-              color: "#ffffff",
-              fontSize: 14 * scale,
-              fontWeight: "500",
-            }}
-          >
-            Sign in
-          </Text>
-        </TouchableOpacity>
-        <Text
-          onPress={() => {
-            console.log("Pressed");
-          }}
-          style={{
-            textAlign: "center",
-            marginTop: 30 * scale,
-            fontSize: 13 * scale,
-          }}
-        >
-          Create new account
-        </Text>
-      </View> 
-     )}
-   </Formik>
+            <TouchableOpacity
+              onPress={() => handleSubmit()}
+              style={{
+                backgroundColor: "#3AA0EB",
+                paddingVertical: 10 * scale,
+                borderRadius: 10 * scale,
+                marginTop: 10 * scale,
+              }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  color: "#ffffff",
+                  fontSize: 14 * scale,
+                  fontWeight: "500",
+                }}
+              >
+                Sign in
+              </Text>
+            </TouchableOpacity>
+            <Text
+              onPress={() => {
+                console.log("Pressed");
+              }}
+              style={{
+                textAlign: "center",
+                marginTop: 30 * scale,
+                fontSize: 13 * scale,
+              }}
+            >
+              Create new account
+            </Text>
+          </View>
+        )}
+      </Formik>
 
       <View style={{ marginTop: 100 * scale }}>
         <Text
