@@ -129,6 +129,32 @@ app.post("/api/signup", async (req, res) => {
   }
 });
 
+
+// Patient Signup Route
+app.post("/api/patient/signup", async (req, res) => {
+  try {
+    const { email, password, name, caretakerPhone } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ error: "Email already registered" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const patient = new User({
+      email,
+      password: hashedPassword,
+      name,
+      role: "patient",
+      caretakerPhone,
+    });
+
+    await patient.save();
+    res.status(201).json({ message: "Patient registered successfully", patient });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to register patient" });
+  }
+});
+
+
 app.post("/api/signin", async (req, res) => {
   try {
     const { email, password } = req.body;
