@@ -25,7 +25,7 @@ const Login = () => {
   const navigation = useNavigation(); 
   const handleSignIn = async (values: { email: string; password: string }) => {
     try {
-      const apiEndpoint = "http://localhost:5000/api/signin";
+      const apiEndpoint = "https://takecare-ds3g.onrender.com/api/signin";
 
       const payload = {
         email: values.email,
@@ -38,7 +38,7 @@ const Login = () => {
       await AsyncStorage.setItem("token", response.data.token);
       await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
 
-      navigation.navigate("Dashboard" as never); // cast to fix TS complaint
+      navigation.navigate("Features" as never); // cast to fix TS complaint
     } catch (err: any) {
       Alert.alert(
         "Error",

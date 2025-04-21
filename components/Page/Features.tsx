@@ -2,8 +2,6 @@ import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-
-
 import AlarmImg from "../../assets/images/alarm";
 import ActivityImg from "../../assets/images/activity";
 import NotesImg from "../../assets/images/notes";
@@ -53,7 +51,7 @@ const Features = () => {
       
         <View>
           <Text style={{ fontSize: 14, color: "#555" }}>Hi, Welcome Back</Text>
-          <Text style={{ fontSize: 18, fontWeight: "bold" }}>Priya</Text>
+          <Text style={{ fontSize: 18, fontWeight: "bold" }}>Harsh</Text>
         </View>
         <View style={{ flexDirection: "row", marginLeft: "auto" }}>
           <TouchableOpacity style={{ marginRight: 10 }}>

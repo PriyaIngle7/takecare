@@ -17,7 +17,7 @@ export default function ExerciseClipsScreen() {
   const [recommendation, setRecommendation] = useState("");
   const [videos, setVideos] = useState([]);
 
-  const PLAYLIST_ID = "PLnfcpZm6el8iug2BBqZev2IDCt4I_sCH0"; // Your playlist ID
+  const PLAYLIST_ID = "PLnhASgDToTktRmHUwRwrwosx1514WR2FU"; // Your playlist ID
   const API_KEY = "AIzaSyDHwLV-epb2py3KMNFuuLhRjdevQHlhLDo"; // Replace with your actual API key
 
   useEffect(() => {
@@ -52,6 +52,7 @@ export default function ExerciseClipsScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           const videoId = item.snippet.resourceId.videoId;
+          // const videoId = "PLnhASgDToTktRmHUwRwrwosx1514WR2FU";
           return (
             <TouchableOpacity
               onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${videoId}`)}

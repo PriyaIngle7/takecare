@@ -38,7 +38,7 @@ export default function AlarmScreen() {
       if (triggeredAlarm?.label.toLowerCase() === "medicine") {
         navigation.navigate("ActivityScreen", { alarmLabel: "Medicine" });
       }
-    }, 60000); // Check every 60 seconds
+    }, 60000);
 
     return () => clearInterval(checkAlarms);
   }, [alarms]);
@@ -76,17 +76,19 @@ export default function AlarmScreen() {
     <View style={styles.container}>
       <View style={styles.profileContainer}>
         <Image
-          style={{ width: 50, height: 50, borderRadius: 100 }}
+          style={styles.avatar}
           source={{
             uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuNhTZJTtkR6b-ADMhmzPvVwaLuLdz273wvQ&s",
           }}
         />
-        <Text style={styles.welcomeText}>Hi, Welcome Back</Text>
-        <Text style={styles.userName}>John Doe</Text>
+        <View>
+          <Text style={styles.welcomeText}>Hi, Welcome Back</Text>
+          <Text style={styles.userName}>John Doe</Text>
+        </View>
       </View>
 
-      <View style={styles.alarmContainer}>
-        <Text style={styles.alarmText}>Alarm</Text>
+      <View style={styles.alarmHeader}>
+        <Text style={styles.alarmTitle}>Your Alarms</Text>
         <TouchableOpacity
           style={styles.addAlarmButton}
           onPress={() => setModalVisible(true)}
@@ -98,10 +100,13 @@ export default function AlarmScreen() {
       <FlatList
         data={alarms}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
           <View style={styles.reminderContainer}>
-            <Text style={styles.timeText}>{item.time}</Text>
-            <Text style={styles.labelText}>{item.label}</Text>
+            <View style={styles.textInfo}>
+              <Text style={styles.timeText}>{item.time}</Text>
+              <Text style={styles.labelText}>{item.label}</Text>
+            </View>
             <Switch
               value={item.enabled}
               onValueChange={() => toggleAlarm(item.id)}
@@ -116,20 +121,29 @@ export default function AlarmScreen() {
       <Modal animationType="slide" transparent={true} visible={modalVisible}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add New Alarm</Text>
             <TextInput
               style={styles.input}
               placeholder="Enter Alarm Label (e.g. Medicine)"
               value={alarmLabel}
               onChangeText={setAlarmLabel}
+              placeholderTextColor="#666"
             />
             <TextInput
               style={styles.input}
               placeholder="Enter Alarm Time (e.g., 7:00 AM)"
               value={alarmTime}
               onChangeText={setAlarmTime}
+              placeholderTextColor="#666"
             />
             <TouchableOpacity style={styles.saveButton} onPress={addAlarm}>
               <Text style={styles.saveButtonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}
+              style={styles.cancelButton}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -140,27 +154,93 @@ export default function AlarmScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#F5F7FA" },
+  avatar: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 20,
   },
   welcomeText: { fontSize: 14, color: "#1E90FF" },
-  userName: { fontSize: 16, fontWeight: "bold" },
-  alarmContainer: {
+  userName: { fontSize: 18, fontWeight: "bold", color: "#333" },
+
+  alarmHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#E3F2FD",
-    padding: 20,
+    marginVertical: 10,
   },
-  alarmText: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  addAlarmButton: { backgroundColor: "#1E90FF", padding: 10, borderRadius: 8 },
+  alarmTitle: { fontSize: 20, fontWeight: "bold", color: "#000" },
+  addAlarmButton: {
+    backgroundColor: "#1E90FF",
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+  },
   addAlarmText: { color: "#fff", fontSize: 16 },
+
+  listContent: { paddingBottom: 80 },
   reminderContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "#E3F2FD",
     padding: 15,
+    marginBottom: 10,
+    borderRadius: 10,
   },
-  timeText: { fontSize: 16, fontWeight: "bold" },
-  labelText: { fontSize: 14, color: "#333" },
+  textInfo: {
+    flex: 1,
+    marginRight: 10,
+  },
+  timeText: { fontSize: 16, fontWeight: "bold", color: "#333" },
+  labelText: { fontSize: 14, color: "#555" },
+
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+    fontSize: 16,
+    color: "#000",
+  },
+  saveButton: {
+    backgroundColor: "#1E90FF",
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  cancelButton: {
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  cancelButtonText: {
+    color: "#1E90FF",
+    fontSize: 16,
+    fontWeight: "500",
+  },
 });
