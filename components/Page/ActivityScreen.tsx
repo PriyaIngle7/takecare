@@ -24,7 +24,7 @@ export default function ActivityScreen() {
   // Fetch past responses from backend
   const fetchLogs = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/activity");
+      const res = await fetch("https://takecare-ds3g.onrender.com/api/activity");
       const data = await res.json();
       setLogs(data);
       countResponses(data);
@@ -47,7 +47,7 @@ export default function ActivityScreen() {
     const newLog = { date: new Date().toISOString(), response: answer };
  
     try {
-      const res = await fetch("http://localhost:5000/api/activity", {
+      const res = await fetch("https://takecare-ds3g.onrender.com/api/activity", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ response: answer }),
@@ -63,9 +63,9 @@ export default function ActivityScreen() {
     }
     
     // Navigate back after a delay
-    setTimeout(() => {
-      navigation.goBack();
-    }, 1000);
+      // setTimeout(() => {
+      //   navigation.goBack();
+      // }, 1000);
   };
   
   return (

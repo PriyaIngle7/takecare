@@ -12,6 +12,8 @@ const Tesseract = require("tesseract.js");
 const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
+const axios = require('axios');
+
 
 
 const app = express(); 
@@ -88,7 +90,9 @@ const auth = async (req, res, next) => {
     res.status(401).json({ error: "Please authenticate" });
   }
 };
-
+app.get("/",(req,res)=>{
+  res.status(201).json({ message:"Chalra hua na mei bsdk" });
+})
 // Authentication Routes
 app.post("/api/signup", async (req, res) => {
   try {
@@ -216,6 +220,39 @@ app.post("/upload-image", upload.single("image"), (req, res) => {
       res.status(500).json({ error: "Failed to extract text from image" });
     });
 });
+// app.post("/upload-image", upload.single("image"), (req, res) => {
+//   if (!req.file) {
+//     return res.status(400).json({ error: "No file uploaded" });
+//   }
+
+//   const imagePath = path.resolve(req.file.path);
+
+//   // Step 1: OCR
+//   Tesseract.recognize(imagePath, "eng", { logger: (m) => console.log(m) })
+//     .then(async ({ data: { text } }) => {
+//       console.log("OCR Text:", text);
+
+//       // Step 2: Call Flask for model inference
+//       try {
+//         const flaskResponse = await axios.post("http://localhost:5001/infer", {
+//           imagePath: imagePath,
+//           ocrText: text,
+//         });
+
+//         res.json({
+//           ocrText: text,
+//           modelOutput: flaskResponse.data.modelOutput,
+//         });
+//       } catch (error) {
+//         console.error("Error calling Flask API:", error.message);
+//         res.status(500).json({ error: "Failed to process image with model" });
+//       }
+//     })
+//     .catch((error) => {
+//       console.error("OCR Error:", error);
+//       res.status(500).json({ error: "Failed to extract text from image" });
+//     });
+// });
 
 // Function to call Python script
 function processWithModel(imagePath, ocrText, res) {

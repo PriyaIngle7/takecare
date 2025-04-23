@@ -13,7 +13,7 @@ const NotesApp: React.FC = () => {
 
   const fetchNotes = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/notes');
+      const response = await axios.get('https://takecare-ds3g.onrender.com/notes');
       setNotes(response.data); 
     } catch (error) {
       console.error('Error fetching notes:', error);
@@ -23,8 +23,8 @@ const NotesApp: React.FC = () => {
   const addNote = async () => {
     if (inputText.trim() === '') return;
     try {
-      const response = await axios.post('http://localhost:5000/add-note', { text: inputText });
-      setNotes([...notes, response.data]); 
+      const response = await axios.post('https://takecare-ds3g.onrender.com/add-note', { text: inputText });
+      setNotes([...notes, response.data]);
       setInputText('');
     } catch (error) {
       console.error('Error adding note:', error);

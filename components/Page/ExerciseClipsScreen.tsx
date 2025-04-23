@@ -9,6 +9,7 @@ import {
   Linking,
   FlatList,
 } from "react-native";
+import NameCard from "../compo/NameCard";
 
 const { width } = Dimensions.get("window");
 const scale = width / 320;
@@ -33,6 +34,7 @@ export default function ExerciseClipsScreen() {
 
   return (
     <View style={{ backgroundColor: "#fff", flex: 1, padding: 10 }}>
+       <NameCard/>
       <TextInput
         placeholder="Recommendations"
         placeholderTextColor={"#000000"}

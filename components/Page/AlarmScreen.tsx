@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import NameCard from "../compo/NameCard";
 
 interface Alarm {
   id: string;
@@ -74,7 +75,7 @@ export default function AlarmScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.profileContainer}>
+      {/* <View style={styles.profileContainer}>
         <Image
           style={styles.avatar}
           source={{
@@ -85,8 +86,8 @@ export default function AlarmScreen() {
           <Text style={styles.welcomeText}>Hi, Welcome Back</Text>
           <Text style={styles.userName}>John Doe</Text>
         </View>
-      </View>
-
+      </View> */}
+ <NameCard/>
       <View style={styles.alarmHeader}>
         <Text style={styles.alarmTitle}>Your Alarms</Text>
         <TouchableOpacity

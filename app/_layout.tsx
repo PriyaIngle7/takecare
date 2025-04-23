@@ -21,6 +21,7 @@ import UserList from "@/components/Page/UserList";
 import ChatApplication from "@/components/Page/ChatApplication";
 import Test from "@/components/Page/Test";
 import Test2 from "@/components/Page/Test2";
+import MantainencePage from "@/components/Page/MantainencePage";
 
 const Stack = createStackNavigator();
 
@@ -28,7 +29,7 @@ export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="Landingpage"
+      initialRouteName="MantainencePage"
     >
       <Stack.Screen name="Test2" component={Test2} />
       <Stack.Screen name="Test" component={Test} />
@@ -42,7 +43,8 @@ export default function RootLayout() {
       <Stack.Screen name="ActivityScreen" component={ActivityScreen} />
       <Stack.Screen name="NotesScreen" component={NotesScreen} />
       <Stack.Screen name="LocationScreen" component={LocationScreen} />
-      <Stack.Screen name="CaloriesScreen" component={CaloriesScreen} />
+      {/* <Stack.Screen name="CaloriesScreen" component={CaloriesScreen} /> */}
+      <Stack.Screen name="CaloriesScreen" component={MantainencePage} />
       <Stack.Screen
         name="MedicineGuideScreen"
         component={MedicineGuideScreen}
@@ -60,7 +62,9 @@ export default function RootLayout() {
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="UserList" component={UserList} />
-      <Stack.Screen name="ChatApplication" component={ChatApplication} />
+      {/* <Stack.Screen name="ChatApplication" component={ChatApplication} /> */}
+      <Stack.Screen name="ChatApplication" component={MantainencePage} />
+      <Stack.Screen name="MantainencePage" component={MantainencePage} />
     </Stack.Navigator>
   );
 }

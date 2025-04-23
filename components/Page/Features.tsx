@@ -12,7 +12,7 @@ import StepsImg from "../../assets/images/steps";
 import MedicineMonitoringImg from "../../assets/images/medicinemonitoring";
 import ExerciseClipsImg from "../../assets/images/exerciseclips";
 import HealthRecordImg from "../../assets/images/healthrecord";
-
+import NameCard from "../compo/NameCard";
 
 type RootStackParamList = {
   AlarmScreen: undefined;
@@ -45,27 +45,7 @@ const Features = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F8FF", paddingTop: 40 }}>
-      
-      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20 }}>
-      <NotesImg width={80} height={40} borderRadius={20} marginRight={10} />
-      
-        <View>
-          <Text style={{ fontSize: 14, color: "#555" }}>Hi, Welcome Back</Text>
-          <Text style={{ fontSize: 18, fontWeight: "bold" }}>Harsh</Text>
-        </View>
-        <View style={{ flexDirection: "row", marginLeft: "auto" }}>
-          <TouchableOpacity style={{ marginRight: 10 }}>
-          <NotesImg width={25} height={25} />
-
-          </TouchableOpacity>
-          <TouchableOpacity>
-          <NotesImg width={25} height={25} />
-
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      
+      <NameCard/>
       <View style={{ margin: 20, backgroundColor: "#E6F0FF", height: 200, borderRadius: 15, padding: 15 }}>
         <Text style={{ fontSize: 16, color: "#555" }}>...</Text>
         <TouchableOpacity style={{ backgroundColor: "#0057FF", padding: 10, borderRadius: 10, width: 100, marginTop: 20 }}>
