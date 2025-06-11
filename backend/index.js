@@ -436,5 +436,85 @@ app.post("/generate-speech", (req, res) => {
   });
 });
 
+/* --------------------- MEDICINE INTAKE MONITORING --------------------- */
+const MedicineIntakeSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  response: {
+    type: String,
+    enum: ['Yes', 'No'],
+    required: true
+  },
+  date: {
+    type: Date,
+    default: Date.now
+  },
+  notes: {
+    type: String,
+    default: ''
+  }
+});
+
+const MedicineIntake = mongoose.model('MedicineIntake', MedicineIntakeSchema);
+
+// Get medicine intake history
+app.get("/api/medicine-intake/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const records = await MedicineIntake.find({ userId })
+      .sort({ date: -1 })
+      .limit(30); // Get last 30 records
+    res.json(records);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Add new medicine intake record
+app.post("/api/medicine-intake", async (req, res) => {
+  try {
+    const { userId, response, notes } = req.body;
+    if (!userId || !response) {
+      return res.status(400).json({ message: "userId and response are required" });
+    }
+
+    const newRecord = new MedicineIntake({
+      userId,
+      response,
+      notes: notes || ''
+    });
+
+    const savedRecord = await newRecord.save();
+    res.status(201).json(savedRecord);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get medicine intake statistics
+app.get("/api/medicine-intake/stats/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const records = await MedicineIntake.find({ userId });
+    
+    const total = records.length;
+    const taken = records.filter(r => r.response === 'Yes').length;
+    const missed = records.filter(r => r.response === 'No').length;
+    const complianceRate = total > 0 ? (taken / total) * 100 : 0;
+
+    res.json({
+      total,
+      taken,
+      missed,
+      complianceRate: Math.round(complianceRate)
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 /* ------------------------ SERVER START ------------------------ */
 app.listen(PORT, () => console.log(` Server running on port ${PORT}`));

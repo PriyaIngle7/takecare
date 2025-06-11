@@ -4,15 +4,26 @@ import {
   Text,
   TouchableOpacity,
   Switch,
-  Image,
   StyleSheet,
   TextInput,
   FlatList,
   Modal,
+  Platform,
+  Alert,
+  Vibration,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 import NameCard from "../compo/NameCard";
+import DateTimePicker from '@react-native-community/datetimepicker';
+
+type RootStackParamList = {
+  AlarmScreen: undefined;
+  ActivityScreen: { alarmLabel: string };
+};
+
+type AlarmScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AlarmScreen'>;
 
 interface Alarm {
   id: string;
@@ -22,40 +33,83 @@ interface Alarm {
 }
 
 export default function AlarmScreen() {
-  const navigation = useNavigation();
-  const [isRecording, setIsRecording] = useState(false);
-  const [alarmTime, setAlarmTime] = useState("");
+  const navigation = useNavigation<AlarmScreenNavigationProp>();
+  const [alarmTime, setAlarmTime] = useState(new Date());
   const [alarmLabel, setAlarmLabel] = useState("");
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [isAlarmRinging, setIsAlarmRinging] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      Vibration.cancel();
+    };
+  }, []);
+
+  const startAlarm = () => {
+    setIsAlarmRinging(true);
+    // Vibrate pattern: wait 500ms, vibrate 1000ms, wait 500ms, repeat
+    Vibration.vibrate([500, 1000, 500], true);
+  };
+
+  const stopAlarm = () => {
+    setIsAlarmRinging(false);
+    Vibration.cancel();
+  };
 
   useEffect(() => {
     const checkAlarms = setInterval(() => {
       const now = new Date();
-      const currentTime = now.getHours() + ":" + now.getMinutes();
-      const triggeredAlarm = alarms.find(
-        (alarm) => alarm.time === currentTime && alarm.enabled
-      );
-      if (triggeredAlarm?.label.toLowerCase() === "medicine") {
-        navigation.navigate("ActivityScreen", { alarmLabel: "Medicine" });
+      const currentTime = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const currentSeconds = now.getSeconds();
+      
+      // Only trigger at the start of the minute (when seconds are 0)
+      if (currentSeconds === 0) {
+        const triggeredAlarm = alarms.find(
+          (alarm) => alarm.time === currentTime && alarm.enabled && !isAlarmRinging
+        );
+        
+        if (triggeredAlarm) {
+          startAlarm();
+          Alert.alert(
+            'Alarm',
+            `Time for ${triggeredAlarm.label}!`,
+            [
+              {
+                text: 'Stop',
+                onPress: () => {
+                  stopAlarm();
+                  if (triggeredAlarm.label.toLowerCase() === "medicine") {
+                    navigation.navigate("ActivityScreen", { alarmLabel: "Medicine" });
+                  }
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        }
       }
-    }, 60000);
+    }, 1000); // Check every second
 
-    return () => clearInterval(checkAlarms);
-  }, [alarms]);
+    return () => {
+      clearInterval(checkAlarms);
+      Vibration.cancel();
+    };
+  }, [alarms, isAlarmRinging, navigation]);
 
   const addAlarm = () => {
-    if (alarmTime && alarmLabel) {
+    if (alarmLabel) {
+      const timeString = `${alarmTime.getHours()}:${alarmTime.getMinutes().toString().padStart(2, '0')}`;
       setAlarms([
         ...alarms,
         {
           id: Date.now().toString(),
-          time: alarmTime,
+          time: timeString,
           label: alarmLabel,
           enabled: true,
         },
       ]);
-      setAlarmTime("");
       setAlarmLabel("");
       setModalVisible(false);
     }
@@ -67,27 +121,22 @@ export default function AlarmScreen() {
 
   const toggleAlarm = (id: string) => {
     setAlarms(
-      alarms.map((alarm) =>
-        alarm.id === id ? { ...alarm, enabled: !alarm.enabled } : alarm
+      alarms.map((a) =>
+        a.id === id ? { ...a, enabled: !a.enabled } : a
       )
     );
   };
 
+  const onTimeChange = (event: any, selectedTime?: Date) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      setAlarmTime(selectedTime);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* <View style={styles.profileContainer}>
-        <Image
-          style={styles.avatar}
-          source={{
-            uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuNhTZJTtkR6b-ADMhmzPvVwaLuLdz273wvQ&s",
-          }}
-        />
-        <View>
-          <Text style={styles.welcomeText}>Hi, Welcome Back</Text>
-          <Text style={styles.userName}>John Doe</Text>
-        </View>
-      </View> */}
- <NameCard/>
+      <NameCard/>
       <View style={styles.alarmHeader}>
         <Text style={styles.alarmTitle}>Your Alarms</Text>
         <TouchableOpacity
@@ -119,7 +168,12 @@ export default function AlarmScreen() {
         )}
       />
 
-      <Modal animationType="slide" transparent={true} visible={modalVisible}>
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add New Alarm</Text>
@@ -130,13 +184,23 @@ export default function AlarmScreen() {
               onChangeText={setAlarmLabel}
               placeholderTextColor="#666"
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter Alarm Time (e.g., 7:00 AM)"
-              value={alarmTime}
-              onChangeText={setAlarmTime}
-              placeholderTextColor="#666"
-            />
+            <TouchableOpacity 
+              style={styles.timePickerButton}
+              onPress={() => setShowTimePicker(true)}
+            >
+              <Text style={styles.timePickerButtonText}>
+                {alarmTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </TouchableOpacity>
+            {showTimePicker && (
+              <DateTimePicker
+                value={alarmTime}
+                mode="time"
+                is24Hour={true}
+                display="default"
+                onChange={onTimeChange}
+              />
+            )}
             <TouchableOpacity style={styles.saveButton} onPress={addAlarm}>
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
@@ -220,6 +284,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     marginBottom: 15,
+    fontSize: 16,
+    color: "#000",
+  },
+  timePickerButton: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+    alignItems: 'center',
+  },
+  timePickerButtonText: {
     fontSize: 16,
     color: "#000",
   },
