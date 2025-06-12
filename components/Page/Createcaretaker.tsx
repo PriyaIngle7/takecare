@@ -1,4 +1,3 @@
-
 import {
   TouchableOpacity,
   SafeAreaView,
@@ -25,13 +24,14 @@ interface SignupFormValues {
   name: string;
   email: string;
   password: string;
-  caretakerPhoneNumber?: string;
+  patientInviteCode?: string;
   role: "caretaker" | "patient";
 }
 
 type RootStackParamList = {
   Login: undefined;
   Dashboard: undefined;
+  Features: undefined;
 };
 
 type CreatecaretakerProps = {
@@ -46,7 +46,7 @@ const SignupSchema = Yup.object().shape({
   role: Yup.string()
     .oneOf(["caretaker", "patient"], "Invalid role")
     .required("Required"),
-  caretakerPhoneNumber: Yup.string().when("role", {
+  patientInviteCode: Yup.string().when("role", {
     is: "patient",
     then: (schema) =>
       schema
@@ -62,19 +62,12 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
 
   const handleSignup = async (values: SignupFormValues) => {
     try {
-      const apiEndpoint =
-        selectedRole === "caretaker"
-          ? "https://takecare-ds3g.onrender.com/api/signup"
-          : "https://takecare-ds3g.onrender.com/api/patient/signup";
-
+      const apiEndpoint = "https://takecare-ds3g.onrender.com/api/signup";
       const payload = {
         name: values.name,
         email: values.email,
         password: values.password,
         role: selectedRole,
-        ...(selectedRole === "patient" && {
-          caretakerPhoneNumber: values.caretakerPhoneNumber,
-        }),
       };
 
       const response = await axios.post(apiEndpoint, payload);
@@ -83,7 +76,28 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
       await AsyncStorage.setItem("token", response.data.token);
       await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
 
-      navigation.navigate("Dashboard");
+      // If caretaker and invite code provided, validate it
+      if (selectedRole === "caretaker" && values.patientInviteCode) {
+        try {
+          const validateResponse = await axios.post(
+            "https://takecare-ds3g.onrender.com/api/caretaker/validate-invite",
+            { inviteCode: values.patientInviteCode },
+            {
+              headers: {
+                Authorization: `Bearer ${response.data.token}`,
+              },
+            }
+          );
+          Alert.alert("Success", "Successfully linked with patient!");
+        } catch (error: any) {
+          Alert.alert(
+            "Error",
+            error.response?.data?.error || "Failed to validate patient invite code"
+          );
+        }
+      }
+
+      navigation.navigate("Features");
     } catch (err: any) {
       Alert.alert(
         "Error",
@@ -168,7 +182,7 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
               name: "",
               email: "",
               password: "",
-              caretakerPhoneNumber: "",
+              patientInviteCode: "",
               role: selectedRole,
             }}
             validationSchema={SignupSchema}
@@ -214,7 +228,7 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
                   </View>
                 ))}
 
-                {selectedRole === "patient" && (
+                {selectedRole === "caretaker" && (
                   <View style={{ marginTop: 20 * scale }}>
                     <TextInput
                       style={{
@@ -225,19 +239,17 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
                         backgroundColor: "#F1F4FF",
                         fontSize: 12 * scale,
                       }}
-                      onChangeText={handleChange("caretakerPhoneNumber")}
-                      onBlur={handleBlur("caretakerPhoneNumber")}
-                      value={values.caretakerPhoneNumber}
-                      placeholder="Caretaker Phone Number"
+                      onChangeText={handleChange("patientInviteCode")}
+                      onBlur={handleBlur("patientInviteCode")}
+                      value={values.patientInviteCode}
+                      placeholder="Patient Invite Code (Optional)"
                       placeholderTextColor={"#626262"}
-                      keyboardType="numeric"
                     />
-                    {errors.caretakerPhoneNumber &&
-                      touched.caretakerPhoneNumber && (
-                        <Text style={{ color: "red", fontSize: 10 * scale }}>
-                          {errors.caretakerPhoneNumber}
-                        </Text>
-                      )}
+                    {errors.patientInviteCode && touched.patientInviteCode && (
+                      <Text style={{ color: "red", fontSize: 10 * scale }}>
+                        {errors.patientInviteCode}
+                      </Text>
+                    )}
                   </View>
                 )}
 

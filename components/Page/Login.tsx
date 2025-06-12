@@ -37,7 +37,7 @@ const Login = () => {
       // Store token and user data
       await AsyncStorage.setItem("token", response.data.token);
       await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
-
+      console
       navigation.navigate("Features" as never); // cast to fix TS complaint
     } catch (err: any) {
       Alert.alert(

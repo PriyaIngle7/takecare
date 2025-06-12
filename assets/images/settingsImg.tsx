@@ -1,11 +1,16 @@
 import * as React from "react"
-import Svg, { Circle, Path } from "react-native-svg"
+import Svg, { Circle, Path, SvgProps } from "react-native-svg"
 
-function SettingsImg(props:any) {
+interface SettingsImgProps extends SvgProps {
+  width?: number;
+  height?: number;
+}
+
+const SettingsImg: React.FC<SettingsImgProps> = (props) => {
   return (
     <Svg
-      width={27}
-      height={28}
+      width={props.width || 27}
+      height={props.height || 28}
       viewBox="0 0 27 28"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

@@ -16,11 +16,11 @@ const axios = require('axios');
 
 
 
-const app = express(); 
+const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: "http://localhost:8081", 
+  origin: "http://localhost:8081",
   credentials: true
 }));
 
@@ -65,6 +65,18 @@ const UserSchema = new mongoose.Schema({
     enum: ['caretaker', 'patient'],
     default: 'patient'
   },
+  inviteCode: {
+    type: String,
+    unique: true
+  },
+  caretakerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  patients: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   createdAt: {
     type: Date,
     default: Date.now
@@ -90,14 +102,14 @@ const auth = async (req, res, next) => {
     res.status(401).json({ error: "Please authenticate" });
   }
 };
-app.get("/",(req,res)=>{
-  res.status(201).json({ message:"Chalra hua na mei bsdk" });
+app.get("/", (req, res) => {
+  res.status(201).json({ message: "Chalra hua na mei bsdk" });
 })
 // Authentication Routes
 app.post("/api/signup", async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
-    
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -499,7 +511,7 @@ app.get("/api/medicine-intake/stats/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const records = await MedicineIntake.find({ userId });
-    
+
     const total = records.length;
     const taken = records.filter(r => r.response === 'Yes').length;
     const missed = records.filter(r => r.response === 'No').length;
@@ -513,6 +525,71 @@ app.get("/api/medicine-intake/stats/:userId", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+// Generate invite code for patient
+app.post("/api/patient/generate-invite", auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'patient') {
+      return res.status(403).json({ error: "Only patients can generate invite codes" });
+    }
+
+    // Generate a random 6-character invite code
+    const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    // Update user with invite code
+    req.user.inviteCode = inviteCode;
+    await req.user.save();
+
+    res.json({ inviteCode });
+  } catch (error) {
+    console.error("Error generating invite code:", error);
+    res.status(500).json({ error: "Failed to generate invite code" });
+  }
+});
+
+// Validate patient invite code and link caretaker
+app.post("/api/caretaker/validate-invite", auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'caretaker') {
+      return res.status(403).json({ error: "Only caretakers can validate invite codes" });
+    }
+
+    const { inviteCode } = req.body;
+    const patient = await User.findOne({ inviteCode, role: 'patient' });
+
+    if (!patient) {
+      return res.status(404).json({ error: "Invalid invite code" });
+    }
+
+    // Link patient to caretaker
+    patient.caretakerId = req.user._id;
+    await patient.save();
+
+    // Add patient to caretaker's patients list
+    req.user.patients.push(patient._id);
+    await req.user.save();
+
+    res.json({ message: "Successfully linked with patient", patient });
+  } catch (error) {
+    console.error("Error validating invite code:", error);
+    res.status(500).json({ error: "Failed to validate invite code" });
+  }
+});
+
+// Get caretaker's patients
+app.get("/api/caretaker/patients", auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'caretaker') {
+      return res.status(403).json({ error: "Only caretakers can access this endpoint" });
+    }
+
+    const patients = await User.find({ caretakerId: req.user._id });
+    res.json({ patients });
+  } catch (error) {
+    console.error("Error fetching patients:", error);
+    res.status(500).json({ error: "Failed to fetch patients" });
   }
 });
 

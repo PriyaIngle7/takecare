@@ -29,7 +29,7 @@ export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="AlarmScreen"
+      initialRouteName="Features"
     >
       <Stack.Screen name="Test2" component={Test2} />
       <Stack.Screen name="Test" component={Test} />
@@ -59,7 +59,7 @@ export default function RootLayout() {
         component={ExerciseClipsScreen}
       />
       <Stack.Screen name="HealthRecordScreen" component={HealthRecordScreen} />
-      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="UserList" component={UserList} />
       {/* <Stack.Screen name="ChatApplication" component={ChatApplication} /> */}

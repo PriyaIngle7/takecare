@@ -13,6 +13,8 @@ import MedicineMonitoringImg from "../../assets/images/medicinemonitoring";
 import ExerciseClipsImg from "../../assets/images/exerciseclips";
 import HealthRecordImg from "../../assets/images/healthrecord";
 import NameCard from "../compo/NameCard";
+import ProfileScreen from "./Profile";
+
 
 type RootStackParamList = {
   AlarmScreen: undefined;

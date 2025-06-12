@@ -27,6 +27,8 @@ export default function ActivityScreen() {
   }, []);
 
   useEffect(() => {
+    console.log("fetchLogs");
+    console.log(userId);
     if (userId) {
       fetchLogs();
     }
@@ -34,10 +36,12 @@ export default function ActivityScreen() {
 
   const loadUserId = async () => {
     try {
-      const userData = await AsyncStorage.getItem('userData');
+      const userData = await AsyncStorage.getItem('user');
       if (userData) {
         const { _id } = JSON.parse(userData);
+        console.log("bhhhhhh"+_id)
         setUserId(_id);
+        console.log("whoooo"+userId)
       }
     } catch (error) {
       console.error("Error loading user ID:", error);
@@ -46,14 +50,17 @@ export default function ActivityScreen() {
 
   // Fetch past responses from backend
   const fetchLogs = async () => {
+    console.log("fetchLogs");
+    console.log(userId);
     if (!userId) return;
 
     try {
       // Fetch medicine intake history
       const res = await fetch(`https://takecare-ds3g.onrender.com/api/medicine-intake/${userId}`);
+
       if (!res.ok) throw new Error('Network response was not ok');
       const data = await res.json();
-      
+
       // Format the data for display
       const formattedLogs = data.map((log: any) => ({
         date: log.date,
@@ -147,11 +154,7 @@ export default function ActivityScreen() {
         [{ text: "OK" }]
       );
     }
-    
-    // Navigate back after a short delay
-    setTimeout(() => {
-      navigation.goBack();
-    }, 1000);
+  
   };
 
   const totalResponses = yesCount + noCount;

@@ -17,6 +17,17 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import NameCard from "../compo/NameCard";
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Configure notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 type RootStackParamList = {
   AlarmScreen: undefined;
@@ -30,6 +41,7 @@ interface Alarm {
   time: string;
   label: string;
   enabled: boolean;
+  notificationId?: string;
 }
 
 export default function AlarmScreen() {
@@ -41,11 +53,71 @@ export default function AlarmScreen() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isAlarmRinging, setIsAlarmRinging] = useState(false);
 
+  // Request notification permissions
   useEffect(() => {
-    return () => {
-      Vibration.cancel();
-    };
+    (async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant notification permissions to receive alarms.');
+      }
+    })();
   }, []);
+
+  // Load saved alarms
+  useEffect(() => {
+    loadAlarms();
+  }, []);
+
+  const loadAlarms = async () => {
+    try {
+      const savedAlarms = await AsyncStorage.getItem('alarms');
+      if (savedAlarms) {
+        setAlarms(JSON.parse(savedAlarms));
+      }
+    } catch (error) {
+      console.error('Error loading alarms:', error);
+    }
+  };
+
+  const saveAlarms = async (updatedAlarms: Alarm[]) => {
+    try {
+      await AsyncStorage.setItem('alarms', JSON.stringify(updatedAlarms));
+    } catch (error) {
+      console.error('Error saving alarms:', error);
+    }
+  };
+
+  const scheduleNotification = async (alarm: Alarm) => {
+    const [hours, minutes] = alarm.time.split(':').map(Number);
+    const now = new Date();
+    const scheduledTime = new Date();
+    scheduledTime.setHours(hours, minutes, 0, 0);
+
+    // If the time has already passed today, schedule for tomorrow
+    if (scheduledTime <= now) {
+      scheduledTime.setDate(scheduledTime.getDate() + 1);
+    }
+
+    const notificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Alarm',
+        body: `Time for ${alarm.label}!`,
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+      },
+      trigger: {
+        hour: hours,
+        minute: minutes,
+        repeats: true,
+      },
+    });
+
+    return notificationId;
+  };
+
+  const cancelNotification = async (notificationId: string) => {
+    await Notifications.cancelScheduledNotificationAsync(notificationId);
+  };
 
   const startAlarm = () => {
     setIsAlarmRinging(true);
@@ -98,33 +170,61 @@ export default function AlarmScreen() {
     };
   }, [alarms, isAlarmRinging, navigation]);
 
-  const addAlarm = () => {
+  const addAlarm = async () => {
     if (alarmLabel) {
       const timeString = `${alarmTime.getHours()}:${alarmTime.getMinutes().toString().padStart(2, '0')}`;
-      setAlarms([
-        ...alarms,
-        {
-          id: Date.now().toString(),
-          time: timeString,
-          label: alarmLabel,
-          enabled: true,
-        },
-      ]);
+      const notificationId = await scheduleNotification({
+        id: Date.now().toString(),
+        time: timeString,
+        label: alarmLabel,
+        enabled: true,
+      });
+
+      const newAlarm = {
+        id: Date.now().toString(),
+        time: timeString,
+        label: alarmLabel,
+        enabled: true,
+        notificationId,
+      };
+
+      const updatedAlarms = [...alarms, newAlarm];
+      setAlarms(updatedAlarms);
+      await saveAlarms(updatedAlarms);
       setAlarmLabel("");
       setModalVisible(false);
     }
   };
 
-  const removeAlarm = (id: string) => {
-    setAlarms(alarms.filter((alarm) => alarm.id !== id));
+  const removeAlarm = async (id: string) => {
+    const alarmToRemove = alarms.find(alarm => alarm.id === id);
+    if (alarmToRemove?.notificationId) {
+      await cancelNotification(alarmToRemove.notificationId);
+    }
+    const updatedAlarms = alarms.filter((alarm) => alarm.id !== id);
+    setAlarms(updatedAlarms);
+    await saveAlarms(updatedAlarms);
   };
 
-  const toggleAlarm = (id: string) => {
-    setAlarms(
-      alarms.map((a) =>
-        a.id === id ? { ...a, enabled: !a.enabled } : a
-      )
-    );
+  const toggleAlarm = async (id: string) => {
+    const updatedAlarms = alarms.map(async (alarm) => {
+      if (alarm.id === id) {
+        const newEnabled = !alarm.enabled;
+        if (newEnabled && !alarm.notificationId) {
+          const notificationId = await scheduleNotification(alarm);
+          return { ...alarm, enabled: newEnabled, notificationId };
+        } else if (!newEnabled && alarm.notificationId) {
+          await cancelNotification(alarm.notificationId);
+          return { ...alarm, enabled: newEnabled, notificationId: undefined };
+        }
+        return { ...alarm, enabled: newEnabled };
+      }
+      return alarm;
+    });
+
+    const resolvedAlarms = await Promise.all(updatedAlarms);
+    setAlarms(resolvedAlarms);
+    await saveAlarms(resolvedAlarms);
   };
 
   const onTimeChange = (event: any, selectedTime?: Date) => {

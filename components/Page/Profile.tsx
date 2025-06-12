@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { View, Text, Image, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { Icon } from "react-native-elements";
 import ProfileSVG from "../../assets/images/profile";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const renderProfileItem = (
     iconName: string,
@@ -10,24 +12,21 @@ const renderProfileItem = (
     value: string,
     onChange: (key: string, value: string) => void
   ) => (
-    <View
-      style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingVertical: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: "#ddd",
-      }}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <Icon name={iconName} type="material-community" size={24} color="#000" />
-        <Text style={{ marginLeft: 10, fontSize: 16 }}>{label}</Text>
+    <View style={{ marginBottom: 20 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
+        <Icon name={iconName} type="material-community" size={24} color="#666" />
+        <Text style={{ marginLeft: 10, fontSize: 16, color: "#666" }}>{label}</Text>
       </View>
       <TextInput
-        style={{ fontSize: 16, color: "gray", borderBottomWidth: 1, borderBottomColor: "#000", width: 150 }}
         value={value}
         onChangeText={(text) => onChange(keyName, text)}
+        style={{
+          borderWidth: 1,
+          borderColor: "#ddd",
+          borderRadius: 8,
+          padding: 10,
+          fontSize: 16,
+        }}
       />
     </View>
   );
@@ -41,6 +40,68 @@ const ProfileScreen = () => {
     address: "Pune, Maharashtra",
     subscriptions: "Active",
   });
+  const [inviteCode, setInviteCode] = useState("");
+  const [userRole, setUserRole] = useState("");
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("user");
+      if (userData) {
+        const user = JSON.parse(userData);
+        setUserRole(user.role);
+        if (user.inviteCode) {
+          setInviteCode(user.inviteCode);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  };
+
+  const generateInviteCode = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Error", "Please login again");
+        return;
+      }
+
+      console.log("Generating invite code...");
+      const response = await axios.post(
+        "http://takecare-ds3g.onrender.com/api/patient/generate-invite",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      console.log("Response:", response.data);
+      setInviteCode(response.data.inviteCode);
+      
+      // Update user data in AsyncStorage
+      const userData = await AsyncStorage.getItem("user");
+      if (userData) {
+        const user = JSON.parse(userData);
+        user.inviteCode = response.data.inviteCode;
+        await AsyncStorage.setItem("user", JSON.stringify(user));
+      }
+
+      Alert.alert("Success", "Invite code generated successfully!");
+    } catch (error: any) {
+      console.error("Error generating invite code:", error.response?.data || error.message);
+      Alert.alert(
+        "Error", 
+        error.response?.data?.error || "Failed to generate invite code. Please try again."
+      );
+    }
+  };
+
   const handleInputChange = (key: string, value: string) => {
     setFormData({ ...formData, [key]: value });
   };
@@ -62,11 +123,32 @@ const ProfileScreen = () => {
       </View>
 
       <View style={{ alignItems: "center", marginTop: 20 }}>
-        <ProfileSVG width={100} height={100} />
+        {/* <ProfileSVG width={100} height={100} /> */}
         <Text style={{ fontSize: 24, fontWeight: "bold", marginTop: 10 }}>
           {formData.name}
         </Text>
-        <Text style={{ color: "gray" }}>Invite Code: #jsdfjf</Text>
+        {userRole === "patient" && (
+          <View style={{ alignItems: "center", marginTop: 10 }}>
+            <Text style={{ color: "gray" }}>
+              Invite Code: {inviteCode || "Not generated"}
+            </Text>
+            {!inviteCode && (
+              <TouchableOpacity
+                onPress={generateInviteCode}
+                style={{
+                  backgroundColor: "#3AA0EB",
+                  padding: 10,
+                  borderRadius: 8,
+                  marginTop: 10,
+                }}
+              >
+                <Text style={{ color: "white", fontWeight: "bold" }}>
+                  Generate Invite Code
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
 
       <View style={{ padding: 20 }}>
