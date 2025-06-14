@@ -70,6 +70,18 @@ const ProfileScreen = () => {
         return;
       }
 
+      const userData = await AsyncStorage.getItem("user");
+      if (!userData) {
+        Alert.alert("Error", "User data not found. Please login again");
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      if (user.role !== "patient") {
+        Alert.alert("Error", "Only patients can generate invite codes");
+        return;
+      }
+
       console.log("Generating invite code...");
       const response = await axios.post(
         "http://takecare-ds3g.onrender.com/api/patient/generate-invite",
@@ -85,20 +97,20 @@ const ProfileScreen = () => {
       setInviteCode(response.data.inviteCode);
       
       // Update user data in AsyncStorage
-      const userData = await AsyncStorage.getItem("user");
-      if (userData) {
-        const user = JSON.parse(userData);
-        user.inviteCode = response.data.inviteCode;
-        await AsyncStorage.setItem("user", JSON.stringify(user));
-      }
+      user.inviteCode = response.data.inviteCode;
+      await AsyncStorage.setItem("user", JSON.stringify(user));
 
       Alert.alert("Success", "Invite code generated successfully!");
     } catch (error: any) {
       console.error("Error generating invite code:", error.response?.data || error.message);
-      Alert.alert(
-        "Error", 
-        error.response?.data?.error || "Failed to generate invite code. Please try again."
-      );
+      if (error.response?.status === 401) {
+        Alert.alert("Error", "Your session has expired. Please login again.");
+      } else {
+        Alert.alert(
+          "Error", 
+          error.response?.data?.error || "Failed to generate invite code. Please try again."
+        );
+      }
     }
   };
 

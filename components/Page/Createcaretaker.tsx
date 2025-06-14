@@ -47,22 +47,22 @@ const SignupSchema = Yup.object().shape({
     .oneOf(["caretaker", "patient"], "Invalid role")
     .required("Required"),
   patientInviteCode: Yup.string().when("role", {
-    is: "patient",
-    then: (schema) =>
-      schema
-        .required("Caretaker Phone Number is required")
-        .matches(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+    is: "caretaker",
+    then: (schema) => schema.optional(),
   }),
 });
 
 const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
-  const [selectedRole, setSelectedRole] = useState<"caretaker" | "patient">(
-    "caretaker"
-  );
+  const [selectedRole, setSelectedRole] = useState<"caretaker" | "patient">("caretaker");
+  const [showInviteCode, setShowInviteCode] = useState(false);
+  const [generatedInviteCode, setGeneratedInviteCode] = useState("");
 
   const handleSignup = async (values: SignupFormValues) => {
     try {
-      const apiEndpoint = "https://takecare-ds3g.onrender.com/api/signup";
+      const apiEndpoint = selectedRole === "patient" 
+        ? "https://takecare-ds3g.onrender.com/api/patient/signup"
+        : "https://takecare-ds3g.onrender.com/api/signup";
+
       const payload = {
         name: values.name,
         email: values.email,
@@ -74,7 +74,7 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
 
       // Store token and user data
       await AsyncStorage.setItem("token", response.data.token);
-      await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
+      await AsyncStorage.setItem("user", JSON.stringify(response.data.patient || response.data.user));
 
       // If caretaker and invite code provided, validate it
       if (selectedRole === "caretaker" && values.patientInviteCode) {
@@ -97,7 +97,13 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
         }
       }
 
-      navigation.navigate("Features");
+      // If patient, show their invite code
+      if (selectedRole === "patient" && response.data.inviteCode) {
+        setGeneratedInviteCode(response.data.inviteCode);
+        setShowInviteCode(true);
+      } else {
+        navigation.navigate("Features");
+      }
     } catch (err: any) {
       Alert.alert(
         "Error",
@@ -122,181 +128,218 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
             alignSelf: "center",
           }}
         >
-          <Text
-            style={{
-              color: "#1F41BB",
-              fontSize: 30 * scale,
-              fontWeight: "bold",
-              textAlign: "center",
-            }}
-          >
-            Create Account
-          </Text>
-          <Text
-            style={{ width: "90%", textAlign: "center", fontSize: 12 * scale }}
-          >
-            Join us today and explore a new way to stay connected with your
-            loved ones.
-          </Text>
-
-          {/* Role Selection */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-around",
-              marginTop: 20 * scale,
-              marginBottom: 20 * scale,
-              backgroundColor: "#F1F4FF",
-              borderRadius: 10 * scale,
-              padding: 10 * scale,
-            }}
-          >
-            {["caretaker", "patient"].map((role) => (
+          {showInviteCode ? (
+            <View style={{ alignItems: "center", padding: 20 * scale }}>
+              <Text style={{ fontSize: 20 * scale, fontWeight: "bold", marginBottom: 20 * scale }}>
+                Your Invite Code
+              </Text>
+              <View style={{
+                backgroundColor: "#F1F4FF",
+                padding: 20 * scale,
+                borderRadius: 10 * scale,
+                width: "100%",
+                alignItems: "center"
+              }}>
+                <Text style={{ fontSize: 24 * scale, fontWeight: "bold", color: "#1F41BB" }}>
+                  {generatedInviteCode}
+                </Text>
+                <Text style={{ marginTop: 10 * scale, textAlign: "center", color: "#666" }}>
+                  Share this code with your caretaker to link your accounts
+                </Text>
+              </View>
               <TouchableOpacity
-                key={role}
+                onPress={() => navigation.navigate("Features")}
                 style={{
-                  backgroundColor:
-                    selectedRole === role ? "#3AA0EB" : "transparent",
-                  padding: 10 * scale,
-                  borderRadius: 8 * scale,
-                  flex: 1,
-                  alignItems: "center",
-                  marginHorizontal: 5 * scale,
+                  backgroundColor: "#3AA0EB",
+                  marginTop: 30 * scale,
+                  borderRadius: 10 * scale,
+                  paddingHorizontal: 40 * scale,
+                  paddingVertical: 15 * scale,
                 }}
-                onPress={() => setSelectedRole(role as "caretaker" | "patient")}
               >
-                <Text
-                  style={{
-                    color: selectedRole === role ? "#fff" : "#1F41BB",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {role.charAt(0).toUpperCase() + role.slice(1)}
+                <Text style={{ color: "#ffffff", fontSize: 16 * scale }}>
+                  Continue
                 </Text>
               </TouchableOpacity>
-            ))}
-          </View>
-
-          <Formik
-            initialValues={{
-              name: "",
-              email: "",
-              password: "",
-              patientInviteCode: "",
-              role: selectedRole,
-            }}
-            validationSchema={SignupSchema}
-            onSubmit={handleSignup}
-          >
-            {({
-              handleChange,
-              handleBlur,
-              handleSubmit,
-              values,
-              errors,
-              touched,
-            }) => (
-              <View>
-                {["name", "email", "password"].map((field) => (
-                  <View key={field} style={{ marginTop: 20 * scale }}>
-                    <TextInput
-                      style={{
-                        borderWidth: 1 * scale,
-                        borderRadius: 10 * scale,
-                        paddingHorizontal: 10 * scale,
-                        paddingVertical: 15 * scale,
-                        backgroundColor: "#F1F4FF",
-                        fontSize: 12 * scale,
-                      }}
-                      onChangeText={handleChange(field)}
-                      onBlur={handleBlur(field)}
-                      value={values[field as keyof SignupFormValues] as string}
-                      placeholder={
-                        field.charAt(0).toUpperCase() + field.slice(1)
-                      }
-                      placeholderTextColor={"#626262"}
-                      secureTextEntry={field === "password"}
-                      keyboardType={field === "email" ? "email-address" : "default"}
-                      autoCapitalize="none"
-                    />
-                    {errors[field as keyof SignupFormValues] &&
-                      touched[field as keyof SignupFormValues] && (
-                        <Text style={{ color: "red", fontSize: 10 * scale }}>
-                          {errors[field as keyof SignupFormValues]}
-                        </Text>
-                      )}
-                  </View>
-                ))}
-
-                {selectedRole === "caretaker" && (
-                  <View style={{ marginTop: 20 * scale }}>
-                    <TextInput
-                      style={{
-                        borderWidth: 1 * scale,
-                        borderRadius: 10 * scale,
-                        paddingHorizontal: 10 * scale,
-                        paddingVertical: 15 * scale,
-                        backgroundColor: "#F1F4FF",
-                        fontSize: 12 * scale,
-                      }}
-                      onChangeText={handleChange("patientInviteCode")}
-                      onBlur={handleBlur("patientInviteCode")}
-                      value={values.patientInviteCode}
-                      placeholder="Patient Invite Code (Optional)"
-                      placeholderTextColor={"#626262"}
-                    />
-                    {errors.patientInviteCode && touched.patientInviteCode && (
-                      <Text style={{ color: "red", fontSize: 10 * scale }}>
-                        {errors.patientInviteCode}
-                      </Text>
-                    )}
-                  </View>
-                )}
-
-                <TouchableOpacity
-                  onPress={() => handleSubmit()}
-                  style={{
-                    backgroundColor: "#3AA0EB",
-                    marginTop: 30 * scale,
-                    borderRadius: 10 * scale,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#ffffff",
-                      textAlign: "center",
-                      paddingVertical: 10 * scale,
-                      fontSize: 15 * scale,
-                    }}
-                  >
-                    Sign up
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </Formik>
-          
-          <View
-            style={{
-              alignSelf: "center",
-              alignItems: "center",
-              marginTop: 80 * scale,
-            }}
-          >
-            <Text style={{ fontWeight: "bold" }}>Already have an account</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+            </View>
+          ) : (
+            <>
               <Text
                 style={{
                   color: "#1F41BB",
+                  fontSize: 30 * scale,
                   fontWeight: "bold",
-                  marginTop: 5 * scale,
+                  textAlign: "center",
                 }}
               >
-                Sign in
+                Create Account
               </Text>
-            </TouchableOpacity>
-          </View>
-          
+              <Text
+                style={{ width: "90%", textAlign: "center", fontSize: 12 * scale }}
+              >
+                Join us today and explore a new way to stay connected with your
+                loved ones.
+              </Text>
+
+              {/* Role Selection */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-around",
+                  marginTop: 20 * scale,
+                  marginBottom: 20 * scale,
+                  backgroundColor: "#F1F4FF",
+                  borderRadius: 10 * scale,
+                  padding: 10 * scale,
+                }}
+              >
+                {["caretaker", "patient"].map((role) => (
+                  <TouchableOpacity
+                    key={role}
+                    style={{
+                      backgroundColor:
+                        selectedRole === role ? "#3AA0EB" : "transparent",
+                      padding: 10 * scale,
+                      borderRadius: 8 * scale,
+                      flex: 1,
+                      alignItems: "center",
+                      marginHorizontal: 5 * scale,
+                    }}
+                    onPress={() => setSelectedRole(role as "caretaker" | "patient")}
+                  >
+                    <Text
+                      style={{
+                        color: selectedRole === role ? "#fff" : "#1F41BB",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {role.charAt(0).toUpperCase() + role.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Formik
+                initialValues={{
+                  name: "",
+                  email: "",
+                  password: "",
+                  patientInviteCode: "",
+                  role: selectedRole,
+                }}
+                validationSchema={SignupSchema}
+                onSubmit={handleSignup}
+              >
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  values,
+                  errors,
+                  touched,
+                }) => (
+                  <View>
+                    {["name", "email", "password"].map((field) => (
+                      <View key={field} style={{ marginTop: 20 * scale }}>
+                        <TextInput
+                          style={{
+                            borderWidth: 1 * scale,
+                            borderRadius: 10 * scale,
+                            paddingHorizontal: 10 * scale,
+                            paddingVertical: 15 * scale,
+                            backgroundColor: "#F1F4FF",
+                            fontSize: 12 * scale,
+                          }}
+                          onChangeText={handleChange(field)}
+                          onBlur={handleBlur(field)}
+                          value={values[field as keyof SignupFormValues] as string}
+                          placeholder={
+                            field.charAt(0).toUpperCase() + field.slice(1)
+                          }
+                          placeholderTextColor={"#626262"}
+                          secureTextEntry={field === "password"}
+                          keyboardType={field === "email" ? "email-address" : "default"}
+                          autoCapitalize="none"
+                        />
+                        {errors[field as keyof SignupFormValues] &&
+                          touched[field as keyof SignupFormValues] && (
+                            <Text style={{ color: "red", fontSize: 10 * scale }}>
+                              {errors[field as keyof SignupFormValues]}
+                            </Text>
+                          )}
+                      </View>
+                    ))}
+
+                    {selectedRole === "caretaker" && (
+                      <View style={{ marginTop: 20 * scale }}>
+                        <TextInput
+                          style={{
+                            borderWidth: 1 * scale,
+                            borderRadius: 10 * scale,
+                            paddingHorizontal: 10 * scale,
+                            paddingVertical: 15 * scale,
+                            backgroundColor: "#F1F4FF",
+                            fontSize: 12 * scale,
+                          }}
+                          onChangeText={handleChange("patientInviteCode")}
+                          onBlur={handleBlur("patientInviteCode")}
+                          value={values.patientInviteCode}
+                          placeholder="Patient Invite Code (Optional)"
+                          placeholderTextColor={"#626262"}
+                        />
+                        {errors.patientInviteCode && touched.patientInviteCode && (
+                          <Text style={{ color: "red", fontSize: 10 * scale }}>
+                            {errors.patientInviteCode}
+                          </Text>
+                        )}
+                      </View>
+                    )}
+
+                    <TouchableOpacity
+                      onPress={() => handleSubmit()}
+                      style={{
+                        backgroundColor: "#3AA0EB",
+                        marginTop: 30 * scale,
+                        borderRadius: 10 * scale,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#ffffff",
+                          textAlign: "center",
+                          paddingVertical: 10 * scale,
+                          fontSize: 15 * scale,
+                        }}
+                      >
+                        Sign up
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </Formik>
+              
+              <View
+                style={{
+                  alignSelf: "center",
+                  alignItems: "center",
+                  marginTop: 80 * scale,
+                }}
+              >
+                <Text style={{ fontWeight: "bold" }}>Already have an account</Text>
+                <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                  <Text
+                    style={{
+                      color: "#1F41BB",
+                      fontWeight: "bold",
+                      marginTop: 5 * scale,
+                    }}
+                  >
+                    Sign in
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </SafeAreaView>
       </ScrollView>
     </KeyboardAvoidingView>

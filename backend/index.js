@@ -34,7 +34,7 @@ if (!fs.existsSync(uploadDir)) {
 
 //  Connect to MongoDB Cluster
 mongoose
-  .connect(process.env.MONGO_URI, {
+  .connect("mongodb+srv://Priya:Priya7@cluster0.aklih.mongodb.net/Takecare", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -149,23 +149,39 @@ app.post("/api/signup", async (req, res) => {
 // Patient Signup Route
 app.post("/api/patient/signup", async (req, res) => {
   try {
-    const { email, password, name, caretakerPhone } = req.body;
+    const { email, password, name } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ error: "Email already registered" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Generate a random 6-character invite code
+    const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    
     const patient = new User({
       email,
       password: hashedPassword,
       name,
       role: "patient",
-      caretakerPhone,
+      inviteCode // Add the invite code during creation
     });
 
     await patient.save();
-    res.status(201).json({ message: "Patient registered successfully", patient });
+
+    // Generate token
+    const token = jwt.sign({ id: patient._id, role: patient.role }, process.env.JWT_SECRET, {
+      expiresIn: "7d"
+    });
+
+    res.status(201).json({ 
+      message: "Patient registered successfully", 
+      patient,
+      token,
+      inviteCode // Send the invite code back to the client
+    });
   } catch (error) {
+    console.error("Error in patient signup:", error);
     res.status(500).json({ error: "Failed to register patient" });
   }
 });
