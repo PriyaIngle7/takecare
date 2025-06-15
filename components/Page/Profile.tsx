@@ -32,7 +32,7 @@ const renderProfileItem = (
   );
   
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }:any) => {
   const [formData, setFormData] = useState({
     name: "Priya Ingle",
     gender: "Female",
@@ -62,57 +62,6 @@ const ProfileScreen = () => {
     }
   };
 
-  const generateInviteCode = async () => {
-    try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        Alert.alert("Error", "Please login again");
-        return;
-      }
-
-      const userData = await AsyncStorage.getItem("user");
-      if (!userData) {
-        Alert.alert("Error", "User data not found. Please login again");
-        return;
-      }
-
-      const user = JSON.parse(userData);
-      if (user.role !== "patient") {
-        Alert.alert("Error", "Only patients can generate invite codes");
-        return;
-      }
-
-      console.log("Generating invite code...");
-      const response = await axios.post(
-        "http://takecare-ds3g.onrender.com/api/patient/generate-invite",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      
-      console.log("Response:", response.data);
-      setInviteCode(response.data.inviteCode);
-      
-      // Update user data in AsyncStorage
-      user.inviteCode = response.data.inviteCode;
-      await AsyncStorage.setItem("user", JSON.stringify(user));
-
-      Alert.alert("Success", "Invite code generated successfully!");
-    } catch (error: any) {
-      console.error("Error generating invite code:", error.response?.data || error.message);
-      if (error.response?.status === 401) {
-        Alert.alert("Error", "Your session has expired. Please login again.");
-      } else {
-        Alert.alert(
-          "Error", 
-          error.response?.data?.error || "Failed to generate invite code. Please try again."
-        );
-      }
-    }
-  };
 
   const handleInputChange = (key: string, value: string) => {
     setFormData({ ...formData, [key]: value });
@@ -125,7 +74,7 @@ const ProfileScreen = () => {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
       <View style={{ flexDirection: "row", alignItems: "center", padding: 10 }}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-left" type="material-community" size={28} color="blue" />
         </TouchableOpacity>
         <Text style={{ fontSize: 22, fontWeight: "bold", color: "blue", marginLeft: 10 }}>Profile</Text>
@@ -144,21 +93,7 @@ const ProfileScreen = () => {
             <Text style={{ color: "gray" }}>
               Invite Code: {inviteCode || "Not generated"}
             </Text>
-            {!inviteCode && (
-              <TouchableOpacity
-                onPress={generateInviteCode}
-                style={{
-                  backgroundColor: "#3AA0EB",
-                  padding: 10,
-                  borderRadius: 8,
-                  marginTop: 10,
-                }}
-              >
-                <Text style={{ color: "white", fontWeight: "bold" }}>
-                  Generate Invite Code
-                </Text>
-              </TouchableOpacity>
-            )}
+            
           </View>
         )}
       </View>

@@ -12,8 +12,8 @@ import Svg, {
 function SvgComponent(props:any) {
   return (
     <Svg
-      width={406}
-      height={422}
+      width={406*1.000012}
+      height={422*1.000012}
       viewBox="0 0 406 422"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

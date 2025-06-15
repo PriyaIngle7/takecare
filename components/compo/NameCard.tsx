@@ -25,6 +25,9 @@ const NameCard = () => {
         marginBottom: 20 * scale,
         justifyContent: "space-around",
         padding: 10,
+        backgroundColor: "#e6f0ff",
+        borderRadius: 10,
+        marginHorizontal: 15,
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center" }}>

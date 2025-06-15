@@ -24,21 +24,16 @@ import Test2 from "@/components/Page/Test2";
 import MantainencePage from "@/components/Page/MantainencePage";
 
 const Stack = createStackNavigator();
-
+// CJ0KL4
 export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
       initialRouteName="Createcaretaker"
     >
-      <Stack.Screen name="Test2" component={Test2} />
-      <Stack.Screen name="Test" component={Test} />
-      <Stack.Screen name="Landingpage" component={Landingpage} />
-      <Stack.Screen name="CreateAccountAs" component={CreateAccountAs} />
       <Stack.Screen name="Createcaretaker" component={Createcaretaker} />
-      <Stack.Screen name="Features" component={Features} />
-      <Stack.Screen name="CreateUser" component={CreateUser} />
       <Stack.Screen name="Login" component={Login}/>
+      <Stack.Screen name="Features" component={Features} />
       <Stack.Screen name="AlarmScreen" component={AlarmScreen} />
       <Stack.Screen name="ActivityScreen" component={ActivityScreen} />
       <Stack.Screen name="NotesScreen" component={NotesScreen} />
