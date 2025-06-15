@@ -29,7 +29,7 @@ export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="Createcaretaker"
+      initialRouteName="Features"
     >
       <Stack.Screen name="Createcaretaker" component={Createcaretaker} />
       <Stack.Screen name="Login" component={Login}/>
