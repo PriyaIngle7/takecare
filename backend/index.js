@@ -13,11 +13,16 @@ const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const axios = require('axios');
+const WebSocket = require('ws');
 
 // 8EX65W
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Create WebSocket server
+const server = require('http').createServer(app);
+const wss = new WebSocket.Server({ server });
 
 app.use(cors({
   origin: "http://localhost:8081",
@@ -34,7 +39,7 @@ if (!fs.existsSync(uploadDir)) {
 
 //  Connect to MongoDB Cluster
 mongoose
-  .connect("mongodb+srv://Priya:Priya7@cluster0.aklih.mongodb.net/Takecare", {
+  .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -609,5 +614,58 @@ app.get("/api/caretaker/patients", auth, async (req, res) => {
   }
 });
 
+// WebSocket connection handling
+wss.on('connection', async (ws) => {
+  console.log('Client connected');
+
+  try {
+    // Fetch recent messages from database
+    const messages = await Message.find()
+      .sort({ timestamp: -1 })
+      .limit(50);
+    ws.send(JSON.stringify(messages.reverse()));
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+  }
+
+  ws.on('message', async (data) => {
+    try {
+      const receivedMessage = JSON.parse(data);
+      const newMessage = new Message(receivedMessage);
+      await newMessage.save();
+
+      // Broadcast message to all connected clients
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify([newMessage]));
+        }
+      });
+    } catch (error) {
+      console.error('Error processing message:', error);
+    }
+  });
+
+  ws.on('close', () => console.log('Client disconnected'));
+});
+
+// Message Schema
+const MessageSchema = new mongoose.Schema({
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  content: {
+    type: String,
+    required: true
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const Message = mongoose.model('Message', MessageSchema);
+
 /* ------------------------ SERVER START ------------------------ */
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

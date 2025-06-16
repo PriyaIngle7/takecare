@@ -4,7 +4,7 @@ const { width } = Dimensions.get("window");
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign,Entypo } from "@expo/vector-icons";
 import AlarmImg from "../../assets/images/alarm";
 import ActivityImg from "../../assets/images/activity";
 import NotesImg from "../../assets/images/notes";
@@ -189,7 +189,12 @@ const Features = () => {
           ))}
         </View>
       </ScrollView>
-
+      <TouchableOpacity 
+          style={styles.chatButton}
+          onPress={() => navigation.navigate("ChatApplication")}
+        >
+          <Entypo name="message" size={28 * scale} color="#FFFFFF" />
+        </TouchableOpacity>
       {isCaretaker && (
         <TouchableOpacity 
           style={styles.addButton}
@@ -247,7 +252,28 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2,
     },
+   
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  chatButton: {
+    position: 'absolute',
+    left: 20,
+    bottom: 20,
+    backgroundColor: '#0B82D4',
+    width: 56 * scale,
+    height: 56 * scale,
+    borderRadius: 28 * scale,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  
 });

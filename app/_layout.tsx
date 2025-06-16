@@ -29,7 +29,7 @@ export default function RootLayout() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="Features"
+      initialRouteName="Login"
     >
       <Stack.Screen name="Createcaretaker" component={Createcaretaker} />
       <Stack.Screen name="Login" component={Login}/>
@@ -57,8 +57,7 @@ export default function RootLayout() {
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="UserList" component={UserList} />
-      {/* <Stack.Screen name="ChatApplication" component={ChatApplication} /> */}
-      <Stack.Screen name="ChatApplication" component={MantainencePage} />
+      <Stack.Screen name="ChatApplication" component={ChatApplication} />
       <Stack.Screen name="MantainencePage" component={MantainencePage} />
     </Stack.Navigator>
   );
