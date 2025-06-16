@@ -56,7 +56,7 @@ const ChatApplication = () => {
 
   const setupWebSocket = () => {
     try {
-      const websocket = new WebSocket('ws://localhost:5000');
+      const websocket = new WebSocket('wss://takecare-ds3g.onrender.com');
       console.log('Attempting to connect to WebSocket...');
 
       websocket.onopen = () => {
