@@ -667,5 +667,28 @@ const MessageSchema = new mongoose.Schema({
 
 const Message = mongoose.model('Message', MessageSchema);
 
+// ... existing code ...
+const vision = require('@google-cloud/vision');
+const visionClient = new vision.ImageAnnotatorClient({
+  keyFilename: path.join(__dirname, 'vision-key.json'), // adjust path if needed
+});
+
+app.post("/detect-food", upload.single("image"), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+  try {
+    const [result] = await visionClient.labelDetection(req.file.path);
+    const labels = result.labelAnnotations
+      .filter(label => label.score > 0.7) // filter for confidence
+      .map(label => label.description);
+
+    res.json({ labels });
+  } catch (error) {
+    console.error("Vision API error:", error);
+    res.status(500).json({ error: "Failed to detect food" });
+  }
+});
+
 /* ------------------------ SERVER START ------------------------ */
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
