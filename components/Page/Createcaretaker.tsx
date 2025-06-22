@@ -12,10 +12,10 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useAuth } from "@/contexts/AuthContext";
 
 const { width } = Dimensions.get("window");
 const scale = width / 320;
@@ -56,6 +56,7 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
   const [selectedRole, setSelectedRole] = useState<"caretaker" | "patient">("caretaker");
   const [showInviteCode, setShowInviteCode] = useState(false);
   const [generatedInviteCode, setGeneratedInviteCode] = useState("");
+  const { login } = useAuth();
 
   const handleSignup = async (values: SignupFormValues) => {
     try {
@@ -72,9 +73,9 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
 
       const response = await axios.post(apiEndpoint, payload);
 
-      // Store token and user data
-      await AsyncStorage.setItem("token", response.data.token);
-      await AsyncStorage.setItem("user", JSON.stringify(response.data.patient || response.data.user));
+      // Use the auth context to handle login
+      const userData = response.data.patient || response.data.user;
+      await login(response.data.token, userData);
 
       // If caretaker and invite code provided, validate it
       if (selectedRole === "caretaker" && values.patientInviteCode) {
@@ -101,9 +102,8 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
       if (selectedRole === "patient" && response.data.inviteCode) {
         setGeneratedInviteCode(response.data.inviteCode);
         setShowInviteCode(true);
-      } else {
-        navigation.navigate("Features");
       }
+      // Navigation will be handled automatically by the auth context
     } catch (err: any) {
       Alert.alert(
         "Error",
@@ -123,7 +123,7 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
         <SafeAreaView
           style={{
             flex: 1,
-            paddingVertical: 40 * scale,
+            paddingVertical: 10 * scale,
             width: "85%",
             alignSelf: "center",
           }}
@@ -322,7 +322,7 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
                 style={{
                   alignSelf: "center",
                   alignItems: "center",
-                  marginTop: 80 * scale,
+                  marginTop: 50 * scale,
                 }}
               >
                 <Text style={{ fontWeight: "bold" }}>Already have an account</Text>

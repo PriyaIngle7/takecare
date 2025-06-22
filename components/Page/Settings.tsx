@@ -9,7 +9,7 @@ interface SettingItemProps {
   onPress: () => void;
 }
 
-const SettingsScreen: React.FC = () => {
+const SettingsScreen: React.FC = ({navigation}:any) => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [editingEmail, setEditingEmail] = useState(false);
@@ -54,7 +54,7 @@ const SettingsScreen: React.FC = () => {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#fff", padding: 20 }}>
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>{navigation.goBack()}}>
           <Icon name="arrow-left" type="material-community" size={28} color="blue" />
         </TouchableOpacity>
         <Text style={{ fontSize: 22, fontWeight: "bold", color: "blue", marginLeft: 10 }}>Settings</Text>

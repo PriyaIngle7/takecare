@@ -13,16 +13,16 @@ import AppleSvg from "@/assets/images/apple";
 import FacebookSvg from "@/assets/images/facebook";
 const { width } = Dimensions.get("window");
 const scale = width / 320;
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-
-
+import { useAuth } from "@/contexts/AuthContext";
 import { Formik } from "formik";
 
 const Login = () => {
   const navigation = useNavigation(); 
+  const { login } = useAuth();
+
   const handleSignIn = async (values: { email: string; password: string }) => {
     try {
       const apiEndpoint = "https://takecare-ds3g.onrender.com/api/signin";
@@ -34,11 +34,11 @@ const Login = () => {
 
       const response = await axios.post(apiEndpoint, payload);
 
-      // Store token and user data
-      await AsyncStorage.setItem("token", response.data.token);
-      await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
-      console
-      navigation.navigate("Features" as never); // cast to fix TS complaint
+      // Use the auth context to handle login
+      await login(response.data.token, response.data.user);
+      
+      // Navigation will be handled automatically by the auth context
+      console.log("Login successful");
     } catch (err: any) {
       Alert.alert(
         "Error",

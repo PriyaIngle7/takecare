@@ -7,6 +7,8 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePatient } from "@/contexts/PatientContext";
 
 const { width } = Dimensions.get("window");
 const scale = width / 320;
@@ -20,10 +22,13 @@ interface Patient {
 
 type RootStackParamList = {
   Createcaretaker: undefined;
+  Features: undefined;
 };
 
 const UserList = ({}) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { user } = useAuth();
+  const { setSelectedPatient } = usePatient();
   const [search, setSearch] = useState("");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,8 +69,18 @@ const UserList = ({}) => {
     patient.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handlePatientSelect = (patient: Patient) => {
+    // Set the selected patient in context
+    setSelectedPatient(patient);
+    // Navigate to Features page
+    navigation.navigate("Features");
+  };
+
   const renderPatientItem = ({ item }: { item: Patient }) => (
-    <TouchableOpacity style={styles.patientCard}>
+    <TouchableOpacity 
+      style={styles.patientCard}
+      onPress={() => handlePatientSelect(item)}
+    >
       <Image
         source={require("../../assets/images/userImage2.png")}
         style={styles.patientImage}
@@ -237,12 +252,12 @@ const styles = StyleSheet.create({
     marginTop: 20 * scale,
   },
   titleImage: {
-    left: -45 * scale,
-    top: -50 * scale,
+    left: -50 * scale,
+    top: -55 * scale,
   },
   title: {
     fontSize: 20 * scale,
-    left: -30 * scale,
+    left: -50 * scale,
     fontWeight: "700",
   },
   listContainer: {

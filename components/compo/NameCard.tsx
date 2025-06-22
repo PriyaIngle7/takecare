@@ -6,6 +6,7 @@ import SettingsImage from "../../assets/images/settingsImg";
 import Settings11 from "../../assets/images/settings11";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { useAuth } from "@/contexts/AuthContext";
 
 type RootStackParamList = {
   ProfileScreen: undefined;
@@ -16,7 +17,7 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 const NameCard = () => {
   const navigation = useNavigation<NavigationProp>();
-
+  const { user } = useAuth();
   return (
     <View
       style={{
@@ -51,7 +52,7 @@ const NameCard = () => {
             Hi, Welcome Back
           </Text>
           <Text style={{ fontSize: 16 * scale, fontWeight: "bold" }}>
-            John Doe
+            {user?.name}
           </Text>
         </View>
       </View>

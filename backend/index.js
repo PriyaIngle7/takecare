@@ -219,6 +219,26 @@ app.post("/api/signin", async (req, res) => {
   }
 });
 
+// Token validation endpoint
+app.get("/api/validate-token", auth, async (req, res) => {
+  try {
+    // The auth middleware already validated the token and attached the user
+    // We just need to return success and user info
+    res.json({ 
+      valid: true, 
+      user: {
+        _id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role,
+        inviteCode: req.user.inviteCode
+      }
+    });
+  } catch (error) {
+    res.status(401).json({ error: "Invalid token" });
+  }
+});
+
 // --------------------- IMAGE TEXT EXTRACTION (OCR FUNCTIONALITY) ---------------------
 
 // Set up multer storage
@@ -470,34 +490,37 @@ app.post("/generate-speech", (req, res) => {
 });
 
 /* --------------------- MEDICINE INTAKE MONITORING --------------------- */
-const MedicineIntakeSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  response: {
-    type: String,
-    enum: ['Yes', 'No'],
-    required: true
-  },
-  date: {
-    type: Date,
-    default: Date.now
-  },
-  notes: {
-    type: String,
-    default: ''
-  }
-});
+// Create a function to get user-specific medicine intake model
+const getMedicineIntakeModel = (userId) => {
+  const dbName = `medicineIntake_${userId}`;
+  const db = mongoose.connection.useDb(dbName);
+  
+  const MedicineIntakeSchema = new mongoose.Schema({
+    response: {
+      type: String,
+      enum: ['Yes', 'No'],
+      required: true
+    },
+    date: {
+      type: Date,
+      default: Date.now
+    },
+    notes: {
+      type: String,
+      default: ''
+    }
+  });
 
-const MedicineIntake = mongoose.model('MedicineIntake', MedicineIntakeSchema);
+  return db.model('MedicineIntake', MedicineIntakeSchema);
+};
 
-// Get medicine intake history
+// Get medicine intake history for specific user
 app.get("/api/medicine-intake/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    const records = await MedicineIntake.find({ userId })
+    const MedicineIntake = getMedicineIntakeModel(userId);
+    
+    const records = await MedicineIntake.find()
       .sort({ date: -1 })
       .limit(30); // Get last 30 records
     res.json(records);
@@ -506,7 +529,7 @@ app.get("/api/medicine-intake/:userId", async (req, res) => {
   }
 });
 
-// Add new medicine intake record
+// Add new medicine intake record for specific user
 app.post("/api/medicine-intake", async (req, res) => {
   try {
     const { userId, response, notes } = req.body;
@@ -514,8 +537,9 @@ app.post("/api/medicine-intake", async (req, res) => {
       return res.status(400).json({ message: "userId and response are required" });
     }
 
+    const MedicineIntake = getMedicineIntakeModel(userId);
+    
     const newRecord = new MedicineIntake({
-      userId,
       response,
       notes: notes || ''
     });
@@ -527,11 +551,13 @@ app.post("/api/medicine-intake", async (req, res) => {
   }
 });
 
-// Get medicine intake statistics
+// Get medicine intake statistics for specific user
 app.get("/api/medicine-intake/stats/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    const records = await MedicineIntake.find({ userId });
+    const MedicineIntake = getMedicineIntakeModel(userId);
+    
+    const records = await MedicineIntake.find();
 
     const total = records.length;
     const taken = records.filter(r => r.response === 'Yes').length;
@@ -611,6 +637,58 @@ app.get("/api/caretaker/patients", auth, async (req, res) => {
   } catch (error) {
     console.error("Error fetching patients:", error);
     res.status(500).json({ error: "Failed to fetch patients" });
+  }
+});
+
+// Get patient's medicine intake data for caretaker
+app.get("/api/caretaker/patient-medicine-intake/:patientId", auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'caretaker') {
+      return res.status(403).json({ error: "Only caretakers can access this endpoint" });
+    }
+
+    const { patientId } = req.params;
+    
+    // Verify that the patient belongs to this caretaker
+    const patient = await User.findOne({ 
+      _id: patientId, 
+      caretakerId: req.user._id 
+    });
+    
+    if (!patient) {
+      return res.status(404).json({ error: "Patient not found or not linked to this caretaker" });
+    }
+
+    // Get patient's medicine intake data
+    const MedicineIntake = getMedicineIntakeModel(patientId);
+    const records = await MedicineIntake.find()
+      .sort({ date: -1 })
+      .limit(30);
+
+    // Get statistics
+    const allRecords = await MedicineIntake.find();
+    const total = allRecords.length;
+    const taken = allRecords.filter(r => r.response === 'Yes').length;
+    const missed = allRecords.filter(r => r.response === 'No').length;
+    const complianceRate = total > 0 ? (taken / total) * 100 : 0;
+
+    res.json({
+      patient: {
+        _id: patient._id,
+        name: patient.name,
+        email: patient.email
+      },
+      records,
+      stats: {
+        total,
+        taken,
+        missed,
+        complianceRate: Math.round(complianceRate)
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching patient medicine intake:", error);
+    res.status(500).json({ error: "Failed to fetch patient medicine intake" });
   }
 });
 

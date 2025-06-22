@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { Icon } from "react-native-elements";
 import ProfileSVG from "../../assets/images/profile";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@/contexts/AuthContext";
 
 const renderProfileItem = (
     iconName: string,
@@ -33,8 +32,9 @@ const renderProfileItem = (
   
 
 const ProfileScreen = ({ navigation }:any) => {
+  const { user, logout } = useAuth();
   const [formData, setFormData] = useState({
-    name: "Priya Ingle",
+    name: user?.name || "Priya Ingle",
     gender: "Female",
     birthday: "26-02-2004",
     address: "Pune, Maharashtra",
@@ -45,23 +45,20 @@ const ProfileScreen = ({ navigation }:any) => {
 
   useEffect(() => {
     loadUserData();
-  }, []);
+  }, [user]);
 
   const loadUserData = async () => {
-    try {
-      const userData = await AsyncStorage.getItem("user");
-      if (userData) {
-        const user = JSON.parse(userData);
-        setUserRole(user.role);
-        if (user.inviteCode) {
-          setInviteCode(user.inviteCode);
-        }
+    if (user) {
+      setUserRole(user.role);
+      if (user.inviteCode) {
+        setInviteCode(user.inviteCode);
       }
-    } catch (error) {
-      console.error("Error loading user data:", error);
+      setFormData(prev => ({
+        ...prev,
+        name: user.name
+      }));
     }
   };
-
 
   const handleInputChange = (key: string, value: string) => {
     setFormData({ ...formData, [key]: value });
@@ -69,6 +66,32 @@ const ProfileScreen = ({ navigation }:any) => {
 
   const handleSave = () => {
     console.log("Saved Data:", formData);
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await logout();
+              // Navigation will be handled automatically by the auth context
+            } catch (error) {
+              console.error("Error during logout:", error);
+              Alert.alert("Error", "Failed to logout. Please try again.");
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -108,6 +131,10 @@ const ProfileScreen = ({ navigation }:any) => {
 
       <TouchableOpacity onPress={handleSave} style={{ backgroundColor: "blue", padding: 10, margin: 20, borderRadius: 5, alignItems: "center" }}>
         <Text style={{ color: "white", fontSize: 16 }}>Save</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={handleLogout} style={{ backgroundColor: "red", padding: 10, margin: 20, borderRadius: 5, alignItems: "center" }}>
+        <Text style={{ color: "white", fontSize: 16 }}>Logout</Text>
       </TouchableOpacity>
     </ScrollView>
   );
