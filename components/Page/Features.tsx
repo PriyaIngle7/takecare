@@ -228,15 +228,17 @@ const Features = () => {
           <TouchableOpacity onPress={handleBackToPatients} style={styles.backButton}>
             <AntDesign name="arrowleft" size={24 * scale} color="#0B82D4" />
             <Text style={styles.backText}>All Patients</Text>
+
+            
+            
+         
           </TouchableOpacity>
-          <View style={styles.patientInfo}>
-            <Text style={styles.patientName}>{selectedPatient.name}</Text>
-            <Text style={styles.patientSubtitle}>Patient Dashboard</Text>
-          </View>
+          
         </View>
       )}
 
-      <NameCard/>
+      <NameCard selectedPatient={selectedPatient} />
+
       
       <View style={styles.carouselContainer}>
         <FlatList
