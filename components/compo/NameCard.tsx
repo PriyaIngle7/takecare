@@ -15,9 +15,16 @@ type RootStackParamList = {
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-const NameCard = () => {
+type NameCardProps = {
+  selectedPatient?: {
+    name: string;
+  } | null;
+};
+
+const NameCard: React.FC<NameCardProps> = ({ selectedPatient }) => {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
+
   return (
     <View
       style={{
@@ -52,7 +59,7 @@ const NameCard = () => {
             Hi, Welcome Back
           </Text>
           <Text style={{ fontSize: 16 * scale, fontWeight: "bold" }}>
-            {user?.name}
+            {selectedPatient?.name ?? user?.name}
           </Text>
         </View>
       </View>
