@@ -46,6 +46,7 @@ const NavigationContent: React.FC = () => {
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
       initialRouteName={isAuthenticated ? "Features" : "Login"}
+      // initialRouteName={"Login"}
     >
       {!isAuthenticated ? (
         // Auth screens - only shown when not authenticated

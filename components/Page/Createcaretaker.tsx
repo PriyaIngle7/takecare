@@ -85,7 +85,7 @@ const Createcaretaker: React.FC<CreatecaretakerProps> = ({ navigation }) => {
             { inviteCode: values.patientInviteCode },
             {
               headers: {
-                Authorization: `Bearer ${response.data.token}`,
+                Authorization: `B earer ${response.data.token}`,
               },
             }
           );
