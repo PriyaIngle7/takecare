@@ -421,6 +421,62 @@ app.get("/api/caretaker/patient-notes/:patientId", auth, async (req, res) => {
   }
 });
 
+// Add note for a specific patient (for caretakers)
+app.post("/api/caretaker/patient-notes/:patientId", auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'caretaker') {
+      return res.status(403).json({ error: "Only caretakers can access this endpoint" });
+    }
+
+    const { patientId } = req.params;
+    const { text } = req.body;
+    
+    if (!text) {
+      return res.status(400).json({ error: "Note text is required" });
+    }
+    
+    // Verify that the patient belongs to this caretaker
+    const patient = await User.findOne({ 
+      _id: patientId, 
+      caretakerId: req.user._id 
+    });
+    
+    if (!patient) {
+      return res.status(404).json({ error: "Patient not found or not linked to this caretaker" });
+    }
+
+    let parsedDate = chrono.parseDate(text);
+
+    if (!parsedDate) {
+      const timeMatch = text.match(/\d{1,2}:\d{2}\s?(AM|PM)?/i);
+      if (timeMatch) {
+        parsedDate = new Date();
+        const [hours, minutes] = timeMatch[0].split(":");
+        parsedDate.setHours(parseInt(hours), parseInt(minutes), 0);
+      }
+    }
+
+    const newNote = new Note({ 
+      userId: patientId, // Note is associated with the patient
+      text, 
+      reminderAt: parsedDate || null 
+    });
+    
+    await newNote.save();
+    
+    if (parsedDate) {
+      schedule.scheduleJob(parsedDate, () => {
+        console.log(` ALERT: Time to check note for ${patient.name}: "${newNote.text}"`);
+      });
+    }
+    
+    res.status(201).json(newNote);
+  } catch (error) {
+    console.error("Error adding patient note:", error);
+    res.status(500).json({ error: "Failed to add note for patient" });
+  }
+});
+
 /* --------------------- ACTIVITY MONITORING (yes/no) --------------------- */
 const ActivitySchema = new mongoose.Schema({
   response: String, // "Yes", "No", or "Other"
