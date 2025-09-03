@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView } from "react-native";
-import * as ImagePicker from "react-native-image-picker";
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import ProfileSvg from "../../assets/images/profile";
 import NameCard from "../compo/NameCard";
+import axios from 'axios';
 
 const PatientInfoScreen = () => {
   const [formData, setFormData] = useState({
@@ -21,22 +22,118 @@ const PatientInfoScreen = () => {
     doctorReport: null,
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (key, value) => {
     setFormData({ ...formData, [key]: value });
   };
 
-  const handleImageUpload = (type) => {
-    ImagePicker.launchImageLibrary({ mediaType: "photo" }, (response) => {
-      if (response.didCancel) {
-        console.log("User cancelled image picker");
-      } else if (response.error) {
-        console.log("ImagePicker Error:", response.error);
-      } else if (response.assets && response.assets.length > 0) {
-        setImageData((prev) => ({ ...prev, [type]: response.assets[0].uri }));
+  const handleImageUpload = async (type) => {
+    try {
+      // Request permissions
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert("Permission Required", "Permission to access camera roll is required!");
+        return;
       }
-    });
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setImageData((prev) => ({ 
+          ...prev, 
+          [type]: {
+            uri: asset.uri,
+            type: 'image/jpeg',
+            name: `${type}_${Date.now()}.jpg`
+          }
+        }));
+      }
+    } catch (error) {
+      console.log("ImagePicker Error:", error);
+      Alert.alert('Error', 'Failed to pick image');
+    }
   };
 
+  const uploadImage = async (imageData: any) => {
+    if (!imageData) return null;
+    
+    const formData = new FormData();
+    formData.append('image', imageData as any);
+
+    try {
+      const response = await axios.post('https://takecare-ds3g.onrender.com/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data.ocrText || 'Image uploaded successfully';
+    } catch (error) {
+      console.error('Image upload error:', error);
+      throw new Error('Failed to upload image');
+    }
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      // Upload images first
+      let prescriptionText = null;
+      let doctorReportText = null;
+
+      if (imageData.prescription) {
+        prescriptionText = await uploadImage(imageData.prescription);
+      }
+      
+      if (imageData.doctorReport) {
+        doctorReportText = await uploadImage(imageData.doctorReport);
+      }
+
+      // Submit health record
+      const healthRecordData = {
+        userId: 'user123', // Replace with actual user ID
+        formData: formData,
+        imageData: {
+          prescription: prescriptionText,
+          doctorReport: doctorReportText,
+        }
+      };
+
+      const response = await axios.post('https://takecare-ds3g.onrender.com/add-health-record', healthRecordData);
+      
+      Alert.alert('Success', 'Health record saved successfully!');
+      
+      // Reset form
+      setFormData({
+        diseaseHistory: "",
+        yearsSuffering: "",
+        symptoms: "",
+        allergies: "",
+        lifestyle: "",
+        smokingDrinking: "",
+        physicalActivity: "",
+        diet: "",
+      });
+      setImageData({
+        prescription: null,
+        doctorReport: null,
+      });
+      
+    } catch (error) {
+      console.error('Submit error:', error);
+      Alert.alert('Error', 'Failed to save health record. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -62,10 +159,21 @@ const PatientInfoScreen = () => {
             />
           )}
           {item.type === "upload" && imageData[item.key] && (
-            <Image source={{ uri: imageData[item.key] }} style={styles.uploadedImage} />
+            <Image source={{ uri: imageData[item.key].uri }} style={styles.uploadedImage} />
           )}
         </View>
       ))}
+      
+      {/* Submit Button */}
+      <TouchableOpacity 
+        style={[styles.submitButton, loading && styles.submitButtonDisabled]} 
+        onPress={handleSubmit}
+        disabled={loading}
+      >
+        <Text style={styles.submitText}>
+          {loading ? 'Saving...' : 'Save Health Record'}
+        </Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -142,6 +250,22 @@ const styles = {
     height: 100,
     marginTop: 10,
     borderRadius: 5,
+  },
+  submitButton: {
+    backgroundColor: "#28a745",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#6c757d",
+  },
+  submitText: {
+    color: "#fff",
+    fontWeight: "bold" as const,
+    fontSize: 16,
   },
 };
 

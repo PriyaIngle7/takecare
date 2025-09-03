@@ -2,6 +2,7 @@
   "expo": {
     "name": "caretaker",
     "slug": "caretaker",
+     "owner": "harsh_mohite_04", 
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

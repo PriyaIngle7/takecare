@@ -81,6 +81,8 @@ const Features = () => {
   useEffect(() => {
     if (isCaretaker) {
       fetchPatients();
+    }else{
+      setLoading(false);
     }
   }, [isCaretaker]);
 
