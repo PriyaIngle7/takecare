@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import axios from 'axios';
 import NameCard from '../compo/NameCard';
+import { useAuth } from '../../contexts/AuthContext';
+import SessionManager from '../../utils/sessionManager';
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -18,8 +20,12 @@ Notifications.setNotificationHandler({
 
 const NotesApp: React.FC = () => {
   const navigation = useNavigation();
+  const { isAuthenticated, user } = useAuth();
   const [notes, setNotes] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const sessionManager = SessionManager.getInstance();
 
   // Request notification permissions
   useEffect(() => {
@@ -32,8 +38,10 @@ const NotesApp: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchNotes();
-  }, []);
+    if (isAuthenticated) {
+      fetchNotes();
+    }
+  }, [isAuthenticated]);
 
   // Schedule notifications for existing notes on app load
   useEffect(() => {
@@ -45,11 +53,34 @@ const NotesApp: React.FC = () => {
   }, [notes]);
 
   const fetchNotes = async () => {
+    if (!isAuthenticated) {
+      Alert.alert('Authentication Required', 'Please log in to view your notes.');
+      return;
+    }
+
+    const token = sessionManager.getToken();
+    if (!token) {
+      Alert.alert('Authentication Error', 'No valid token found. Please log in again.');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = await axios.get('https://takecare-ds3g.onrender.com/notes');
+      const response = await axios.get('https://takecare-ds3g.onrender.com/notes', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setNotes(response.data); 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching notes:', error);
+      if (error.response?.status === 401) {
+        Alert.alert('Authentication Error', 'Your session has expired. Please log in again.');
+      } else {
+        Alert.alert('Error', 'Failed to fetch notes. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -133,8 +164,27 @@ const NotesApp: React.FC = () => {
 
   const addNote = async () => {
     if (inputText.trim() === '') return;
+    
+    if (!isAuthenticated) {
+      Alert.alert('Authentication Required', 'Please log in to add notes.');
+      return;
+    }
+
+    const token = sessionManager.getToken();
+    if (!token) {
+      Alert.alert('Authentication Error', 'No valid token found. Please log in again.');
+      return;
+    }
+
     try {
-      const response = await axios.post('https://takecare-ds3g.onrender.com/add-note', { text: inputText });
+      const response = await axios.post('https://takecare-ds3g.onrender.com/add-note', 
+        { text: inputText },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
       const newNote = response.data;
       
       // Schedule local notification if reminder time is set
@@ -142,10 +192,17 @@ const NotesApp: React.FC = () => {
         await scheduleNotification(newNote);
       }
       
-      setNotes([...notes, newNote]);
+      setNotes([newNote, ...notes]); // Add new note at the beginning
       setInputText('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding note:', error);
+      if (error.response?.status === 401) {
+        Alert.alert('Authentication Error', 'Your session has expired. Please log in again.');
+      } else if (error.response?.status === 400) {
+        Alert.alert('Invalid Input', error.response.data.error || 'Please check your input and try again.');
+      } else {
+        Alert.alert('Error', 'Failed to add note. Please try again.');
+      }
     }
   };
 
@@ -163,18 +220,27 @@ const NotesApp: React.FC = () => {
       <NameCard />
       <View style={styles.inputContainer}>
         <TextInput 
-          style={styles.input} 
-          placeholder="Enter a note " 
+          style={[styles.input, !isAuthenticated && styles.disabledInput]} 
+          placeholder={isAuthenticated ? "Enter a note" : "Please log in to add notes"} 
           value={inputText} 
-          onChangeText={setInputText} 
+          onChangeText={setInputText}
+          editable={isAuthenticated}
         />
-        <TouchableOpacity style={styles.button} onPress={addNote}>
+        <TouchableOpacity 
+          style={[styles.button, !isAuthenticated && styles.disabledButton]} 
+          onPress={addNote}
+          disabled={!isAuthenticated}
+        >
           <Text style={styles.buttonText}>Add</Text>
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.notesList}>
-        {notes.length === 0 ? (
-          <Text style={styles.noItemText}>No notes yet</Text>
+        {loading ? (
+          <Text style={styles.noItemText}>Loading your notes...</Text>
+        ) : !isAuthenticated ? (
+          <Text style={styles.noItemText}>Please log in to view your notes</Text>
+        ) : notes.length === 0 ? (
+          <Text style={styles.noItemText}>No notes yet. Add your first note above!</Text>
         ) : (
           notes.map((note) => {
             console.log('Note object:', note);
@@ -292,6 +358,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 8,
     fontStyle: 'italic',
+  },
+  disabledInput: {
+    backgroundColor: '#F0F0F0',
+    color: '#999',
+  },
+  disabledButton: {
+    backgroundColor: '#CCC',
   },
 });
 

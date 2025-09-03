@@ -329,15 +329,25 @@ function processWithModel(imagePath, ocrText, res) {
 
 /* ------------------------ NOTES FUNCTIONALITY (notesDB) ------------------------ */
 const NoteSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   text: String,
   reminderAt: Date,
   createdAt: { type: Date, default: Date.now },
 });
-const notesDB = mongoose.connection.useDb("notesDB");
+const notesDB = mongoose.connection.useDb("Takecare");
 const Note = notesDB.model("Note", NoteSchema);
 
-app.post("/add-note", async (req, res) => {
+app.post("/add-note", auth, async (req, res) => {
   const { text } = req.body;
+  
+  if (!text) {
+    return res.status(400).json({ error: "Note text is required" });
+  }
+
   let parsedDate = chrono.parseDate(text);
 
   if (!parsedDate) {
@@ -349,7 +359,12 @@ app.post("/add-note", async (req, res) => {
     }
   }
 
-  const newNote = new Note({ text, reminderAt: parsedDate || null });
+  const newNote = new Note({ 
+    userId: req.user._id,
+    text, 
+    reminderAt: parsedDate || null 
+  });
+  
   try {
     await newNote.save();
     res.status(201).json(newNote);
@@ -363,12 +378,46 @@ app.post("/add-note", async (req, res) => {
   }
 });
 
-app.get("/notes", async (req, res) => {
+app.get("/notes", auth, async (req, res) => {
   try {
-    const notes = await Note.find();
+    const notes = await Note.find({ userId: req.user._id }).sort({ createdAt: -1 });
     res.status(200).json(notes);
   } catch (error) {
     res.status(400).json({ message: "Error fetching notes" });
+  }
+});
+
+// Get notes for a specific patient (for caretakers)
+app.get("/api/caretaker/patient-notes/:patientId", auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'caretaker') {
+      return res.status(403).json({ error: "Only caretakers can access this endpoint" });
+    }
+
+    const { patientId } = req.params;
+    
+    // Verify that the patient belongs to this caretaker
+    const patient = await User.findOne({ 
+      _id: patientId, 
+      caretakerId: req.user._id 
+    });
+    
+    if (!patient) {
+      return res.status(404).json({ error: "Patient not found or not linked to this caretaker" });
+    }
+
+    const notes = await Note.find({ userId: patientId }).sort({ createdAt: -1 });
+    res.status(200).json({
+      patient: {
+        _id: patient._id,
+        name: patient.name,
+        email: patient.email
+      },
+      notes
+    });
+  } catch (error) {
+    console.error("Error fetching patient notes:", error);
+    res.status(500).json({ error: "Failed to fetch patient notes" });
   }
 });
 
