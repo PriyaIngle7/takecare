@@ -236,6 +236,14 @@ export default function AlarmScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <FontAwesome name="chevron-left" size={18} color="#1E90FF" />
+        </TouchableOpacity>
+      </View>
       <NameCard/>
       <View style={styles.alarmHeader}>
         <Text style={styles.alarmTitle}>Your Alarms</Text>
@@ -319,6 +327,17 @@ export default function AlarmScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#F5F7FA" },
+  header: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    marginBottom: 10,
+  },
+  backButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "transparent",
+  },
   avatar: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
   profileContainer: {
     flexDirection: "row",

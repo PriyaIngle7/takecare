@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert, StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import ProfileSvg from "../../assets/images/profile";
 import NameCard from "../compo/NameCard";
 import axios from 'axios';
 
 const PatientInfoScreen = () => {
+  const navigation = useNavigation();
   const [formData, setFormData] = useState({
     diseaseHistory: "",
     yearsSuffering: "",
@@ -137,10 +139,18 @@ const PatientInfoScreen = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-    
+      {/* Header with Back Button */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Name Card */}
-      <NameCard name="John Doe" />
+      <NameCard />
 
       {/* Input Fields */}
       {questions.map((item, index) => (
@@ -192,15 +202,28 @@ const questions = [
   { key: "diet", question: "What kind of diet do you follow?", placeholder: "Vegetarian / Non-Vegetarian / Vegan", type: "text" }
 ];
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     padding: 20,
     backgroundColor: "#f9f9f9",
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
     marginBottom: 20,
+    paddingHorizontal: 10,
+    paddingTop: 10,
+  },
+  backButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "transparent",
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: "#0B82D4",
   },
   headerText: {
     marginLeft: 10,
@@ -267,7 +290,7 @@ const styles = {
     fontWeight: "bold" as const,
     fontSize: 16,
   },
-};
+});
 
 
 export default PatientInfoScreen;

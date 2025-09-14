@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import React, { useState } from "react";
+import { useNavigation } from "@react-navigation/native";
 import NameCard from "../compo/NameCard";
 import CameraSVG from "@/assets/images/camer";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
@@ -15,6 +16,7 @@ const { width } = Dimensions.get("window");
 const scale = 320 / width;
 
 const MedicineMonitoringScreen = () => {
+  const navigation = useNavigation();
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
 
@@ -41,6 +43,14 @@ const MedicineMonitoringScreen = () => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+      </View>
       <NameCard />
 
       <View style={styles.box}>
@@ -71,6 +81,24 @@ export default MedicineMonitoringScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    paddingHorizontal: 20 * scale,
+    paddingTop: 10 * scale,
+  },
+  backButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "transparent",
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#0B82D4",
   },
   box: {
     backgroundColor: "#a7cfec",

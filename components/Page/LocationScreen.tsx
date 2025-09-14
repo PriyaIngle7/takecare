@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator, StyleSheet, Dimensions } from "react-native";
 import * as Location from "expo-location";
+import { useNavigation } from "@react-navigation/native";
 import NameCard from "../compo/NameCard";
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
@@ -19,6 +20,7 @@ interface AddressState {
 }
 
 export default function LocationScreen() {
+  const navigation = useNavigation();
   const [location, setLocation] = useState<LocationState | null>(null);
   const [address, setAddress] = useState<AddressState | null>(null);
   const [loading, setLoading] = useState(false);
@@ -77,6 +79,15 @@ export default function LocationScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+      </View>
+      
       <NameCard />
 
       <Text style={styles.title}>Location</Text>
@@ -134,6 +145,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#B3D4FC",
     padding: 20,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  backButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "transparent",
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1976D2",
   },
   title: {
     textAlign: "center",

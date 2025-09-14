@@ -230,6 +230,12 @@ export default function ActivityScreen() {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
         <Image
           source={{ uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuNhTZJTtkR6b-ADMhmzPvVwaLuLdz273wvQ&s" }}
           style={styles.avatar}
@@ -335,6 +341,18 @@ export default function ActivityScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#E3F2FD", padding: 20 },
   header: { flexDirection: "row", alignItems: "center", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#D3D3D3" },
+  backButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "transparent",
+    marginRight: 10,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#0B82D4",
+  },
   avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
   headerText: { fontSize: 18, fontWeight: "bold" },
   onlineStatus: { marginLeft: "auto", fontSize: 14 },
