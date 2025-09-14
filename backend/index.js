@@ -560,6 +560,41 @@ app.get("/health-records", async (req, res) => {
   }
 });
 
+app.get("/api/health-record/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const record = await HealthRecord.findOne({ userId }).sort({ createdAt: -1 });
+    
+    if (!record) {
+      return res.status(404).json({ message: "No health record found for this user" });
+    }
+
+    // Format the response to match frontend expectations
+    const formData = {
+      diseaseHistory: record.diseaseHistory || "",
+      yearsSuffering: record.yearsSuffering || "",
+      symptoms: record.symptoms || "",
+      allergies: record.allergies || "",
+      lifestyle: record.lifestyle || "",
+      smokingDrinking: record.smokingDrinking || "",
+      physicalActivity: record.physicalActivity || "",
+      diet: record.diet || "",
+    };
+
+    res.status(200).json({ 
+      formData,
+      imageData: {
+        prescription: record.prescription,
+        doctorReport: record.doctorReport
+      },
+      createdAt: record.createdAt
+    });
+  } catch (error) {
+    console.error("Error fetching health record:", error);
+    res.status(500).json({ error: "Failed to fetch health record" });
+  }
+});
+
 app.post("/generate-speech", (req, res) => {
   const { text } = req.body;
 

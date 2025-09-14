@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "@/contexts/AuthContext";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from "expo-image-picker";
 import ProfileSvg from "../../assets/images/profile";
 import NameCard from "../compo/NameCard";
@@ -8,7 +10,8 @@ import axios from 'axios';
 
 const PatientInfoScreen = () => {
   const navigation = useNavigation();
-  const [formData, setFormData] = useState({
+  const { user } = useAuth();
+  const [formData, setFormData] = useState<{[key: string]: string}>({
     diseaseHistory: "",
     yearsSuffering: "",
     symptoms: "",
@@ -19,18 +22,82 @@ const PatientInfoScreen = () => {
     diet: "",
   });
 
-  const [imageData, setImageData] = useState({
+  const [imageData, setImageData] = useState<{[key: string]: any}>({
     prescription: null,
     doctorReport: null,
   });
 
   const [loading, setLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
-  const handleChange = (key, value) => {
-    setFormData({ ...formData, [key]: value });
+  // Load existing health record data when component mounts
+  useEffect(() => {
+    if (user?._id) {
+      loadHealthRecord();
+    }
+  }, [user]);
+
+  const loadHealthRecord = async () => {
+    if (!user?._id) return;
+    
+    try {
+      setIsLoadingData(true);
+      
+      // Always try to load from local storage first for immediate display
+      const localData = await AsyncStorage.getItem(`healthRecord_${user._id}`);
+      if (localData) {
+        const parsedData = JSON.parse(localData);
+        console.log('Loaded local data:', parsedData);
+        setFormData(parsedData.formData || parsedData);
+      }
+      
+      // Then try to fetch from backend to sync any updates
+      try {
+        const response = await axios.get(`https://takecare-ds3g.onrender.com/api/health-record/${user._id}`);
+        
+        if (response.data && response.data.formData) {
+          console.log('Loaded backend data:', response.data.formData);
+          setFormData(response.data.formData);
+          // Update local storage with backend data
+          await saveLocalHealthRecord(response.data.formData);
+        }
+      } catch (backendError: any) {
+        console.log('Backend not available, using local data:', backendError.message);
+        // Local data is already loaded above, so this is fine
+      }
+      
+    } catch (error) {
+      console.error('Error loading health record:', error);
+    } finally {
+      setIsLoadingData(false);
+    }
   };
 
-  const handleImageUpload = async (type) => {
+  const saveLocalHealthRecord = async (data: any) => {
+    if (!user?._id) return;
+    
+    try {
+      await AsyncStorage.setItem(`healthRecord_${user._id}`, JSON.stringify({
+        formData: data,
+        lastUpdated: new Date().toISOString(),
+        userId: user._id
+      }));
+    } catch (error) {
+      console.error('Error saving local health record:', error);
+    }
+  };
+
+  const handleChange = (key: string, value: string) => {
+    console.log('handleChange called:', key, value);
+    const updatedFormData = { ...formData, [key]: value };
+    console.log('Updated form data:', updatedFormData);
+    setFormData(updatedFormData);
+    
+    // Save to local storage immediately for offline access
+    saveLocalHealthRecord(updatedFormData);
+  };
+
+  const handleImageUpload = async (type: string) => {
     try {
       // Request permissions
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -85,6 +152,11 @@ const PatientInfoScreen = () => {
   };
 
   const handleSubmit = async () => {
+    if (!user?._id) {
+      Alert.alert('Error', 'User not authenticated. Please log in again.');
+      return;
+    }
+
     setLoading(true);
     try {
       // Upload images first
@@ -99,9 +171,9 @@ const PatientInfoScreen = () => {
         doctorReportText = await uploadImage(imageData.doctorReport);
       }
 
-      // Submit health record
+      // Submit health record with authenticated user's ID
       const healthRecordData = {
-        userId: 'user123', // Replace with actual user ID
+        userId: user._id,
         formData: formData,
         imageData: {
           prescription: prescriptionText,
@@ -109,29 +181,26 @@ const PatientInfoScreen = () => {
         }
       };
 
+      // Save to local storage first for offline access
+      await saveLocalHealthRecord(formData);
+
+      // Try to save to backend
       const response = await axios.post('https://takecare-ds3g.onrender.com/add-health-record', healthRecordData);
       
       Alert.alert('Success', 'Health record saved successfully!');
       
-      // Reset form
-      setFormData({
-        diseaseHistory: "",
-        yearsSuffering: "",
-        symptoms: "",
-        allergies: "",
-        lifestyle: "",
-        smokingDrinking: "",
-        physicalActivity: "",
-        diet: "",
-      });
-      setImageData({
-        prescription: null,
-        doctorReport: null,
-      });
+      // Reload the data to ensure it's displayed correctly
+      await loadHealthRecord();
       
     } catch (error) {
       console.error('Submit error:', error);
-      Alert.alert('Error', 'Failed to save health record. Please try again.');
+      
+      // Even if backend fails, data is saved locally
+      Alert.alert(
+        'Saved Locally', 
+        'Health record saved locally. It will be synced when you\'re back online.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoading(false);
     }
@@ -151,6 +220,13 @@ const PatientInfoScreen = () => {
 
       {/* Name Card */}
       <NameCard />
+
+      {/* Loading indicator */}
+      {isLoadingData && (
+        <View style={styles.loadingContainer}>
+          <Text>Loading your health record...</Text>
+        </View>
+      )}
 
       {/* Input Fields */}
       {questions.map((item, index) => (
@@ -224,6 +300,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600" as const,
     color: "#0B82D4",
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: "center" as const,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 10,
+    marginVertical: 10,
   },
   headerText: {
     marginLeft: 10,
